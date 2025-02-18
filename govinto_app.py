@@ -5,10 +5,20 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 import openpyxl
 
-# Load Firebase credentials
-cred = credentials.Certificate("firebase-key.json")
+import json
+import streamlit as st
+import firebase_admin
+from firebase_admin import credentials, firestore
+
+# Load Firebase credentials from Streamlit Secrets
+firebase_config = st.secrets["firebase"]
+cred = credentials.Certificate(json.loads(firebase_config))
 if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
+
+# Connect to Firestore
+db = firestore.client()
+
 
 # Connect to Firestore
 db = firestore.client()
