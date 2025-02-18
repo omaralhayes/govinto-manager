@@ -1,16 +1,19 @@
+import json
 import streamlit as st
-import pandas as pd
-import sqlite3
 import firebase_admin
 from firebase_admin import credentials, firestore
-import openpyxl
-import json
 
-# Load Firebase credentials from Streamlit Secrets
-firebase_config = json.loads(st.secrets["firebase"])
-cred = credentials.Certificate(firebase_config)
-if not firebase_admin._apps:
-    firebase_admin.initialize_app(cred)
+# ✅ التحقق من أن بيانات Firebase متاحة في Streamlit Secrets
+if "firebase" in st.secrets:
+    firebase_config = st.secrets["firebase"]  # تحميل القيم مباشرة دون تحويلها إلى JSON
+    if not firebase_admin._apps:
+        cred = credentials.Certificate(firebase_config)
+        firebase_admin.initialize_app(cred)
+    db = firestore.client()
+else:
+    st.error("❌ خطأ: بيانات Firebase غير متوفرة في Streamlit Secrets. يرجى إضافتها وإعادة تشغيل التطبيق.")
+    st.stop()  # إيقاف تنفيذ التطبيق في حالة عدم وجود البيانات
+
 
 # Connect to Firestore
 db = firestore.client()
