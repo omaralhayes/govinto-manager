@@ -8,14 +8,15 @@ import json
 
 # Load Firebase credentials from Streamlit Secrets
 if "firebase" in st.secrets:
-    firebase_config = json.loads(st.secrets["firebase"])
+    firebase_config = st.secrets["firebase"]
+    cred = credentials.Certificate(firebase_config)
     if not firebase_admin._apps:
-        cred = credentials.Certificate(firebase_config)
         firebase_admin.initialize_app(cred)
     db = firestore.client()
 else:
-    st.error("\u274c خطأ: بيانات Firebase غير متوفرة في Streamlit Secrets. يرجى إضافتها وإعادة تشغيل التطبيق.")
+    st.error("❌ خطأ: بيانات Firebase غير متوفرة في Streamlit Secrets. يرجى إضافتها وإعادة تشغيل التطبيق.")
     st.stop()
+
 
 # Connect to SQLite
 conn = sqlite3.connect("govinto_products.db", check_same_thread=False)
