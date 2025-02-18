@@ -46,8 +46,45 @@ def main():
     choice = st.sidebar.radio("Select an option", menu)
     
     st.title("Govinto Product Management")
+
+    if choice == "Add Product":
+        st.subheader("Add New Product")
+        df_categories = pd.read_sql_query("SELECT * FROM categories", conn)
+        category_options = df_categories["category"].tolist()
+        selected_category = st.selectbox("Select Product Category", ["Select"] + category_options)
+        
+        subcategory_options = []
+        if selected_category != "Select":
+            category_id = df_categories[df_categories["category"] == selected_category]["id"].values[0]
+            df_subcategories = pd.read_sql_query("SELECT sub_category FROM subcategories WHERE category_id = ?", conn, params=(category_id,))
+            subcategory_options = df_subcategories["sub_category"].tolist()
+        
+        selected_subcategory = st.selectbox("Select Subcategory", ["Select"] + subcategory_options)
+        product_name = st.text_input("Product Name")
+        product_link = st.text_input("Product Link")
+        likes = st.number_input("Likes", min_value=0, step=1)
+        comments = st.number_input("Comments", min_value=0, step=1)
+        rating = st.slider("Rating", 0.0, 5.0, 0.0, 0.1)
+        supplier_orders = st.number_input("Supplier Orders", min_value=0, step=1)
+        supplier_price = st.number_input("Supplier Price (USD)", min_value=0.0, step=0.1)
+        store_price = st.number_input("Store Price (USD)", min_value=0.0, step=0.1)
+        
+        if st.button("Add Product") and selected_category != "Select" and selected_subcategory != "Select":
+            cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (selected_category, selected_subcategory, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price))
+            conn.commit()
+            st.success("Product added successfully!")
+            st.rerun()
     
-    if choice == "View Products":
+    elif choice == "Manage Categories":
+        st.subheader("Manage Categories and Subcategories")
+        new_category = st.text_input("Add New Category")
+        if st.button("Add Category"):
+            cursor.execute("INSERT OR IGNORE INTO categories (category) VALUES (?)", (new_category,))
+            conn.commit()
+            st.success("Category added successfully!")
+            st.rerun()
+    
+    elif choice == "View Products":
         st.subheader("All Products")
         df = pd.read_sql_query("SELECT * FROM products", conn)
         st.dataframe(df)
@@ -79,28 +116,6 @@ def main():
                                (row["category"], row["sub_category"], row["product_name"], row["product_link"], row["likes"], row["comments"], row["rating"], row["supplier_orders"], row["supplier_price"], row["store_price"]))
             conn.commit()
             st.success("Products imported successfully!")
-            st.rerun()
-    
-    elif choice == "Sync Data":
-        st.subheader("Sync Data Between SQLite and Firestore")
-        
-        if st.button("Sync from Firestore to SQLite"):
-            cursor.execute("DELETE FROM products")
-            conn.commit()
-            products = db.collection("products").stream()
-            for product in products:
-                data = product.to_dict()
-                cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (data["category"], data["sub_category"], data["product_name"], data["product_link"], data["likes"], data["comments"], data["rating"], data["supplier_orders"], data["supplier_price"], data["store_price"]))
-            conn.commit()
-            st.success("Data synced from Firestore to SQLite!")
-            st.rerun()
-        
-        if st.button("Sync from SQLite to Firestore"):
-            products = pd.read_sql_query("SELECT * FROM products", conn)
-            for _, row in products.iterrows():
-                product_ref = db.collection("products").document()
-                product_ref.set(row.to_dict())
-            st.success("Data synced from SQLite to Firestore!")
             st.rerun()
 
 if __name__ == "__main__":
