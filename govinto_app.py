@@ -7,16 +7,27 @@ import openpyxl
 import json
 
 # Load Firebase credentials from Streamlit Secrets
-if "firebase" in st.secrets:
-    firebase_config = st.secrets["firebase"]
-    cred = credentials.Certificate(firebase_config)
+try:
+    firebase_config = {
+        "type": st.secrets["firebase_type"],
+        "project_id": st.secrets["firebase_project_id"],
+        "private_key_id": st.secrets["firebase_private_key_id"],
+        "private_key": st.secrets["firebase_private_key"].replace("\\n", "\n"),
+        "client_email": st.secrets["firebase_client_email"],
+        "client_id": st.secrets["firebase_client_id"],
+        "auth_uri": st.secrets["firebase_auth_uri"],
+        "token_uri": st.secrets["firebase_token_uri"],
+        "auth_provider_x509_cert_url": st.secrets["firebase_auth_provider_x509_cert_url"],
+        "client_x509_cert_url": st.secrets["firebase_client_x509_cert_url"],
+        "universe_domain": st.secrets["firebase_universe_domain"]
+    }
     if not firebase_admin._apps:
+        cred = credentials.Certificate(firebase_config)
         firebase_admin.initialize_app(cred)
     db = firestore.client()
-else:
-    st.error("❌ خطأ: بيانات Firebase غير متوفرة في Streamlit Secrets. يرجى إضافتها وإعادة تشغيل التطبيق.")
+except Exception as e:
+    st.error(f"❌ خطأ: فشل تحميل بيانات Firebase. تأكد من إدخال القيم الصحيحة في Streamlit Secrets. التفاصيل: {e}")
     st.stop()
-
 
 # Connect to SQLite
 conn = sqlite3.connect("govinto_products.db", check_same_thread=False)
