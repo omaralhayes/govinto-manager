@@ -4,21 +4,13 @@ import sqlite3
 import firebase_admin
 from firebase_admin import credentials, firestore
 import openpyxl
-
 import json
-import streamlit as st
-import firebase_admin
-from firebase_admin import credentials, firestore
 
 # Load Firebase credentials from Streamlit Secrets
-firebase_config = st.secrets["firebase"]
-cred = credentials.Certificate(json.loads(firebase_config))
+firebase_config = json.loads(st.secrets["firebase"])
+cred = credentials.Certificate(firebase_config)
 if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
-
-# Connect to Firestore
-db = firestore.client()
-
 
 # Connect to Firestore
 db = firestore.client()
@@ -91,38 +83,6 @@ def main():
                 db.collection("categories").document(selected_category).collection("subcategories").document(new_subcategory).set({"name": new_subcategory})
                 st.success("Subcategory added successfully!")
                 st.rerun()
-            
-            df_subcategories = pd.read_sql_query("SELECT * FROM subcategories WHERE category_id = ?", conn, params=(category_id,))
-            st.write("### Existing Subcategories")
-            st.dataframe(df_subcategories)
-            
-            selected_subcategory = st.selectbox("Select Subcategory to Delete", ["Select"] + df_subcategories["sub_category"].tolist())
-            if selected_subcategory != "Select" and st.button("Delete Subcategory"):
-                cursor.execute("DELETE FROM subcategories WHERE sub_category = ?", (selected_subcategory,))
-                conn.commit()
-                db.collection("categories").document(selected_category).collection("subcategories").document(selected_subcategory).delete()
-                st.warning("Subcategory deleted!")
-                st.rerun()
-            
-            if st.button("Delete Category"):
-                cursor.execute("DELETE FROM categories WHERE category = ?", (selected_category,))
-                cursor.execute("DELETE FROM subcategories WHERE category_id = ?", (category_id,))
-                conn.commit()
-                db.collection("categories").document(selected_category).delete()
-                st.warning("Category and associated subcategories deleted!")
-                st.rerun()
-
-    elif choice == "View Products":
-        st.subheader("All Products")
-        df = pd.read_sql_query("SELECT * FROM products", conn)
-        st.dataframe(df)
-        
-        if st.button("Delete All Products"):
-            cursor.execute("DELETE FROM products")
-            conn.commit()
-            db.collection("products").stream()
-            st.success("All products deleted successfully!")
-            st.rerun()
     
     elif choice == "Sync Data":
         st.subheader("Sync Data Between SQLite and Firestore")
@@ -137,37 +97,6 @@ def main():
             conn.commit()
             st.success("Data synced from Firestore to SQLite!")
             st.rerun()
-        
-        if st.button("Sync from SQLite to Firestore"):
-            products = pd.read_sql_query("SELECT * FROM products", conn)
-            for _, row in products.iterrows():
-                product_ref = db.collection("products").document()
-                product_ref.set(row.to_dict())
-            st.success("Data synced from SQLite to Firestore!")
-            st.rerun()
-
-    elif choice == "Import/Export Data":
-        st.subheader("Import & Export Data")
-        
-        # Export Data
-        st.write("### Export Products to CSV")
-        df = pd.read_sql_query("SELECT * FROM products", conn)
-        file_name = "govinto_products.csv"
-        df.to_csv(file_name, index=False)
-        st.download_button("Download CSV File", open(file_name, "rb"), file_name=file_name)
-        
-        # Import Data
-        st.write("### Import Products from CSV")
-        uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
-        
-        if uploaded_file is not None:
-            df_uploaded = pd.read_csv(uploaded_file)
-            for _, row in df_uploaded.iterrows():
-                cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-                               (row["category"], row["sub_category"], row["product_name"], row["product_link"], row["likes"], row["comments"], row["rating"], row["supplier_orders"], row["supplier_price"], row["store_price"]))
-            conn.commit()
-            st.success("Products imported successfully!")
-            st.rerun()
-
+    
 if __name__ == "__main__":
     main()
