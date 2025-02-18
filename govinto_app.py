@@ -6,13 +6,13 @@ from firebase_admin import credentials, firestore
 import openpyxl
 import json
 
-# Load Firebase credentials from Streamlit Secrets
+# ✅ تحميل بيانات Firebase من Streamlit Secrets
 try:
     firebase_config = {
         "type": st.secrets["firebase_type"],
         "project_id": st.secrets["firebase_project_id"],
         "private_key_id": st.secrets["firebase_private_key_id"],
-        "private_key": st.secrets["firebase_private_key"].replace("\\n", "\n"),
+        "private_key": st.secrets["firebase_private_key"],  # ✅ لا حاجة لاستبدال \n
         "client_email": st.secrets["firebase_client_email"],
         "client_id": st.secrets["firebase_client_id"],
         "auth_uri": st.secrets["firebase_auth_uri"],
@@ -21,19 +21,24 @@ try:
         "client_x509_cert_url": st.secrets["firebase_client_x509_cert_url"],
         "universe_domain": st.secrets["firebase_universe_domain"]
     }
+
+    # ✅ تهيئة Firebase فقط إذا لم يكن مهيئًا بالفعل
     if not firebase_admin._apps:
         cred = credentials.Certificate(firebase_config)
         firebase_admin.initialize_app(cred)
+
     db = firestore.client()
+    st.success("✅ Firebase تم الاتصال بنجاح!")
+
 except Exception as e:
     st.error(f"❌ خطأ: فشل تحميل بيانات Firebase. تأكد من إدخال القيم الصحيحة في Streamlit Secrets. التفاصيل: {e}")
     st.stop()
 
-# Connect to SQLite
+# ✅ الاتصال بـ SQLite
 conn = sqlite3.connect("govinto_products.db", check_same_thread=False)
 cursor = conn.cursor()
 
-# Create tables if they don't exist
+# ✅ إنشاء الجداول إذا لم تكن موجودة
 cursor.execute('''CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY AUTOINCREMENT, category TEXT UNIQUE)''')
 cursor.execute('''CREATE TABLE IF NOT EXISTS subcategories (id INTEGER PRIMARY KEY AUTOINCREMENT, category_id INTEGER, sub_category TEXT UNIQUE, FOREIGN KEY(category_id) REFERENCES categories(id))''')
 cursor.execute('''CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY AUTOINCREMENT, category TEXT, sub_category TEXT, product_name TEXT, product_link TEXT, likes INTEGER, comments INTEGER, rating REAL, supplier_orders INTEGER, supplier_price REAL, store_price REAL)''')
