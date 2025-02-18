@@ -1,22 +1,21 @@
-import json
 import streamlit as st
+import pandas as pd
+import sqlite3
 import firebase_admin
 from firebase_admin import credentials, firestore
+import openpyxl
+import json
 
-# ✅ التحقق من أن بيانات Firebase متاحة في Streamlit Secrets
+# Load Firebase credentials from Streamlit Secrets
 if "firebase" in st.secrets:
-    firebase_config = st.secrets["firebase"]  # تحميل القيم مباشرة دون تحويلها إلى JSON
+    firebase_config = json.loads(st.secrets["firebase"])
     if not firebase_admin._apps:
         cred = credentials.Certificate(firebase_config)
         firebase_admin.initialize_app(cred)
     db = firestore.client()
 else:
-    st.error("❌ خطأ: بيانات Firebase غير متوفرة في Streamlit Secrets. يرجى إضافتها وإعادة تشغيل التطبيق.")
-    st.stop()  # إيقاف تنفيذ التطبيق في حالة عدم وجود البيانات
-
-
-# Connect to Firestore
-db = firestore.client()
+    st.error("\u274c خطأ: بيانات Firebase غير متوفرة في Streamlit Secrets. يرجى إضافتها وإعادة تشغيل التطبيق.")
+    st.stop()
 
 # Connect to SQLite
 conn = sqlite3.connect("govinto_products.db", check_same_thread=False)
@@ -63,43 +62,6 @@ def main():
             conn.commit()
             st.success("Product added successfully!")
             st.rerun()
-    
-    elif choice == "Manage Categories":
-        st.subheader("Manage Categories and Subcategories")
-        new_category = st.text_input("Add New Category")
-        if st.button("Add Category"):
-            cursor.execute("INSERT OR IGNORE INTO categories (category) VALUES (?)", (new_category,))
-            conn.commit()
-            db.collection("categories").document(new_category).set({"name": new_category})
-            st.success("Category added successfully!")
-            st.rerun()
-        
-        df_categories = pd.read_sql_query("SELECT * FROM categories", conn)
-        selected_category = st.selectbox("Select Category", ["Select"] + df_categories["category"].tolist())
-        
-        if selected_category != "Select":
-            category_id = df_categories[df_categories["category"] == selected_category]["id"].values[0]
-            new_subcategory = st.text_input("Add Subcategory")
-            if st.button("Add Subcategory"):
-                cursor.execute("INSERT OR IGNORE INTO subcategories (category_id, sub_category) VALUES (?, ?)", (category_id, new_subcategory))
-                conn.commit()
-                db.collection("categories").document(selected_category).collection("subcategories").document(new_subcategory).set({"name": new_subcategory})
-                st.success("Subcategory added successfully!")
-                st.rerun()
-    
-    elif choice == "Sync Data":
-        st.subheader("Sync Data Between SQLite and Firestore")
-        
-        if st.button("Sync from Firestore to SQLite"):
-            cursor.execute("DELETE FROM products")
-            conn.commit()
-            products = db.collection("products").stream()
-            for product in products:
-                data = product.to_dict()
-                cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (data["category"], data["sub_category"], data["product_name"], data["product_link"], data["likes"], data["comments"], data["rating"], data["supplier_orders"], data["supplier_price"], data["store_price"]))
-            conn.commit()
-            st.success("Data synced from Firestore to SQLite!")
-            st.rerun()
-    
+
 if __name__ == "__main__":
     main()
