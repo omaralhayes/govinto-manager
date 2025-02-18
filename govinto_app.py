@@ -84,6 +84,36 @@ def main():
             db.collection("categories").document(new_category).set({"name": new_category})
             st.success("Category added successfully!")
             st.rerun()
-    
+        
+        df_categories = pd.read_sql_query("SELECT * FROM categories", conn)
+        selected_category = st.selectbox("Select Category", ["Select"] + df_categories["category"].tolist())
+        
+        if selected_category != "Select":
+            category_id = df_categories[df_categories["category"] == selected_category]["id"].values[0]
+            new_subcategory = st.text_input("Add Subcategory")
+            if st.button("Add Subcategory"):
+                cursor.execute("INSERT OR IGNORE INTO subcategories (category_id, sub_category) VALUES (?, ?)", (category_id, new_subcategory))
+                conn.commit()
+                db.collection("categories").document(selected_category).collection("subcategories").document(new_subcategory).set({"name": new_subcategory})
+                st.success("Subcategory added successfully!")
+                st.rerun()
+            
+            df_subcategories = pd.read_sql_query("SELECT * FROM subcategories WHERE category_id = ?", conn, params=(category_id,))
+            selected_subcategory = st.selectbox("Select Subcategory to Delete", ["Select"] + df_subcategories["sub_category"].tolist())
+            if selected_subcategory != "Select" and st.button("Delete Subcategory"):
+                cursor.execute("DELETE FROM subcategories WHERE sub_category = ?", (selected_subcategory,))
+                conn.commit()
+                db.collection("categories").document(selected_category).collection("subcategories").document(selected_subcategory).delete()
+                st.warning("Subcategory deleted!")
+                st.rerun()
+            
+            if st.button("Delete Category"):
+                cursor.execute("DELETE FROM categories WHERE category = ?", (selected_category,))
+                cursor.execute("DELETE FROM subcategories WHERE category_id = ?", (category_id,))
+                conn.commit()
+                db.collection("categories").document(selected_category).delete()
+                st.warning("Category and associated subcategories deleted!")
+                st.rerun()
+
 if __name__ == "__main__":
     main()
