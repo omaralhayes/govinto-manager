@@ -47,45 +47,32 @@ def main():
     st.title("Govinto Product Management")
 
     # 🛍 **إضافة منتج جديد**
-   if choice == "Add Product":
-    st.subheader("Add New Product")
-
-    # استرجاع الفئات الرئيسية من قاعدة البيانات
-    categories = [row[0] for row in cursor.execute("SELECT category FROM categories").fetchall()]
-    selected_category = st.selectbox("Select Product Category", ["Select"] + categories)
-
-    # استرجاع الفئات الفرعية المرتبطة بالفئة المختارة
-    subcategories = []
-    if selected_category != "Select":
-        subcategories = [row[0] for row in cursor.execute(
-            "SELECT sub_category FROM subcategories WHERE category_id = (SELECT id FROM categories WHERE category = ?)", 
-            (selected_category,)
-        ).fetchall()]
-
-    selected_subcategory = st.selectbox("Select Subcategory", ["Select"] + subcategories)
-    
-    # إدخال بيانات المنتج
-    product_name = st.text_input("Product Name")
-    product_link = st.text_input("Product Link")
-    likes = st.number_input("Likes", min_value=0, step=1)
-    comments = st.number_input("Comments", min_value=0, step=1)
-    rating = st.slider("Rating", 0.0, 5.0, 0.0, 0.1)
-    supplier_orders = st.number_input("Supplier Orders", min_value=0, step=1)
-    supplier_price = st.number_input("Supplier Price (USD)", min_value=0.0, step=0.1)
-    store_price = st.number_input("Store Price (USD)", min_value=0.0, step=0.1)
-
-    # زر الإضافة مع التحقق من إدخال جميع القيم المطلوبة
-    if st.button("Add Product"):
-        if selected_category != "Select" and selected_subcategory != "Select" and product_name:
-            cursor.execute(
-                "INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (selected_category, selected_subcategory, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price)
-            )
+    if choice == "Add Product":
+        st.subheader("Add New Product")
+        
+        categories = [row[0] for row in cursor.execute("SELECT category FROM categories").fetchall()]
+        selected_category = st.selectbox("Select Product Category", ["Select"] + categories)
+        
+        subcategories = []
+        if selected_category != "Select":
+            subcategories = [row[0] for row in cursor.execute("SELECT sub_category FROM subcategories WHERE category_id = (SELECT id FROM categories WHERE category = ?)", (selected_category,)).fetchall()]
+        
+        selected_subcategory = st.selectbox("Select Subcategory", ["Select"] + subcategories)
+        product_name = st.text_input("Product Name")
+        product_link = st.text_input("Product Link")
+        likes = st.number_input("Likes", min_value=0, step=1)
+        comments = st.number_input("Comments", min_value=0, step=1)
+        rating = st.slider("Rating", 0.0, 5.0, 0.0, 0.1)
+        supplier_orders = st.number_input("Supplier Orders", min_value=0, step=1)
+        supplier_price = st.number_input("Supplier Price (USD)", min_value=0.0, step=0.1)
+        store_price = st.number_input("Store Price (USD)", min_value=0.0, step=0.1)
+        
+        if st.button("Add Product") and selected_category != "Select" and selected_subcategory != "Select":
+            cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                           (selected_category, selected_subcategory, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price))
             conn.commit()
             st.success("✅ Product added successfully!")
             st.rerun()
-        else:
-            st.warning("⚠️ Please fill in all required fields before adding a product.")
 
     # 🛠 **إدارة الفئات والفئات الفرعية**
     elif choice == "Manage Categories":
