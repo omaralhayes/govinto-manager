@@ -2,4 +2,4 @@ streamlit
 pandas
 firebase-admin
 openpyxl
-sqlite3
+sqlite-utils
