@@ -46,38 +46,11 @@ def main():
     
     st.title("Govinto Product Management")
 
-    # 🛂 **إضافة منتج جديد**
-    if choice == "Add Product":
-        st.subheader("Add New Product")
-        df_categories = pd.read_sql_query("SELECT * FROM categories", conn)
-        category_options = df_categories["category"].tolist()
-        selected_category = st.selectbox("Select Product Category", ["Select"] + category_options)
-        
-        subcategory_options = []
-        if selected_category != "Select":
-            category_id = df_categories[df_categories["category"] == selected_category]["id"].values[0]
-            df_subcategories = pd.read_sql_query("SELECT sub_category FROM subcategories WHERE category_id = ?", conn, params=(category_id,))
-            subcategory_options = df_subcategories["sub_category"].tolist()
-        
-        selected_subcategory = st.selectbox("Select Subcategory", ["Select"] + subcategory_options)
-        product_name = st.text_input("Product Name")
-        product_link = st.text_input("Product Link")
-        likes = st.number_input("Likes", min_value=0, step=1)
-        comments = st.number_input("Comments", min_value=0, step=1)
-        rating = st.slider("Rating", 0.0, 5.0, 0.0, 0.1)
-        supplier_orders = st.number_input("Supplier Orders", min_value=0, step=1)
-        supplier_price = st.number_input("Supplier Price (USD)", min_value=0.0, step=0.1)
-        store_price = st.number_input("Store Price (USD)", min_value=0.0, step=0.1)
-        
-        if st.button("Add Product") and selected_category != "Select" and selected_subcategory != "Select":
-            cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (selected_category, selected_subcategory, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price))
-            conn.commit()
-            st.success("✅ Product added successfully!")
-            st.rerun()
-    
     # 🛠 **إدارة الفئات والفئات الفرعية**
-    elif choice == "Manage Categories":
+    if choice == "Manage Categories":
         st.subheader("Manage Categories and Subcategories")
+        
+        # إضافة فئة جديدة
         new_category = st.text_input("Add New Category")
         if st.button("Add Category"):
             cursor.execute("INSERT OR IGNORE INTO categories (category) VALUES (?)", (new_category,))
@@ -85,31 +58,50 @@ def main():
             st.success("✅ Category added successfully!")
             st.rerun()
         
+        # تعديل أو حذف الفئات
         categories = [row[0] for row in cursor.execute("SELECT category FROM categories").fetchall()]
         selected_category = st.selectbox("Select Category", ["Select"] + categories)
         
         if selected_category != "Select":
+            new_category_name = st.text_input("Rename Category", selected_category)
+            
+            if st.button("Update Category"):
+                cursor.execute("UPDATE categories SET category = ? WHERE category = ?", (new_category_name, selected_category))
+                conn.commit()
+                st.success("✅ Category updated successfully!")
+                st.rerun()
+            
+            if st.button("Delete Category"):
+                cursor.execute("DELETE FROM categories WHERE category = ?", (selected_category,))
+                conn.commit()
+                st.warning("⚠️ Category deleted!")
+                st.rerun()
+            
+            # إضافة، تعديل، أو حذف الفئات الفرعية
             new_subcategory = st.text_input("Add Subcategory")
             if st.button("Add Subcategory"):
                 cursor.execute("INSERT OR IGNORE INTO subcategories (category_id, sub_category) VALUES ((SELECT id FROM categories WHERE category = ?), ?)", (selected_category, new_subcategory))
                 conn.commit()
                 st.success("✅ Subcategory added successfully!")
                 st.rerun()
-
-    # 🔄 **مزامنة البيانات بين Firestore و SQLite**
-    elif choice == "Sync Data":
-        st.subheader("Sync Data Between SQLite and Firestore")
-        
-        if st.button("Sync from Firestore to SQLite"):
-            cursor.execute("DELETE FROM products")
-            conn.commit()
-            products = db.collection("products").stream()
-            for product in products:
-                data = product.to_dict()
-                cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (data["category"], data["sub_category"], data["product_name"], data["product_link"], data["likes"], data["comments"], data["rating"], data["supplier_orders"], data["supplier_price"], data["store_price"]))
-            conn.commit()
-            st.success("✅ Data synced from Firestore to SQLite!")
-            st.rerun()
+            
+            subcategories = [row[0] for row in cursor.execute("SELECT sub_category FROM subcategories WHERE category_id = (SELECT id FROM categories WHERE category = ?)", (selected_category,)).fetchall()]
+            selected_subcategory = st.selectbox("Select Subcategory", ["Select"] + subcategories)
+            
+            if selected_subcategory != "Select":
+                new_subcategory_name = st.text_input("Rename Subcategory", selected_subcategory)
+                
+                if st.button("Update Subcategory"):
+                    cursor.execute("UPDATE subcategories SET sub_category = ? WHERE sub_category = ?", (new_subcategory_name, selected_subcategory))
+                    conn.commit()
+                    st.success("✅ Subcategory updated successfully!")
+                    st.rerun()
+                
+                if st.button("Delete Subcategory"):
+                    cursor.execute("DELETE FROM subcategories WHERE sub_category = ?", (selected_subcategory,))
+                    conn.commit()
+                    st.warning("⚠️ Subcategory deleted!")
+                    st.rerun()
 
 if __name__ == "__main__":
     main()
