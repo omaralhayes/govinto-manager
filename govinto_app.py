@@ -47,47 +47,7 @@ def main():
     
     st.title("Govinto Product Management")
     
-    if choice == "Add Product":
-        st.subheader("Add New Product")
-        df_categories = pd.read_sql_query("SELECT * FROM categories", conn)
-        category_options = df_categories["category"].tolist()
-        selected_category = st.selectbox("Select Product Category", ["Select"] + category_options)
-        
-        subcategory_options = []
-        if selected_category != "Select":
-            category_id = df_categories[df_categories["category"] == selected_category]["id"].values[0]
-            df_subcategories = pd.read_sql_query("SELECT sub_category FROM subcategories WHERE category_id = ?", conn, params=(category_id,))
-            subcategory_options = df_subcategories["sub_category"].tolist()
-        
-        selected_subcategory = st.selectbox("Select Subcategory", ["Select"] + subcategory_options)
-        product_name = st.text_input("Product Name")
-        product_link = st.text_input("Product Link")
-        likes = st.number_input("Likes", min_value=0, step=1)
-        comments = st.number_input("Comments", min_value=0, step=1)
-        rating = st.slider("Rating", 0.0, 5.0, 0.0, 0.1)
-        supplier_orders = st.number_input("Supplier Orders", min_value=0, step=1)
-        supplier_price = st.number_input("Supplier Price (USD)", min_value=0.0, step=0.1)
-        store_price = st.number_input("Store Price (USD)", min_value=0.0, step=0.1)
-        
-        if st.button("Add Product") and selected_category != "Select" and selected_subcategory != "Select":
-            cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (selected_category, selected_subcategory, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price))
-            conn.commit()
-            db.collection("products").add({
-                "category": selected_category,
-                "sub_category": selected_subcategory,
-                "product_name": product_name,
-                "product_link": product_link,
-                "likes": likes,
-                "comments": comments,
-                "rating": rating,
-                "supplier_orders": supplier_orders,
-                "supplier_price": supplier_price,
-                "store_price": store_price
-            })
-            st.success("Product added successfully!")
-            st.rerun()
-    
-    elif choice == "Manage Categories":
+    if choice == "Manage Categories":
         st.subheader("Manage Categories and Subcategories")
         new_category = st.text_input("Add New Category")
         if st.button("Add Category"):
@@ -98,36 +58,54 @@ def main():
             st.rerun()
         
         df_categories = pd.read_sql_query("SELECT * FROM categories", conn)
-        if not df_categories.empty:
-            st.dataframe(df_categories)
-    
-    elif choice == "View Products":
-        st.subheader("All Products")
-        df = pd.read_sql_query("SELECT * FROM products", conn)
-        if not df.empty:
-            st.dataframe(df)
-        else:
-            st.warning("No products available.")
-    
-    elif choice == "Import/Export Data":
-        st.subheader("Import & Export Data")
-        df = pd.read_sql_query("SELECT * FROM products", conn)
-        file_name = "govinto_products.csv"
-        df.to_csv(file_name, index=False)
-        st.download_button("Download CSV File", open(file_name, "rb"), file_name=file_name)
-    
-    elif choice == "Sync Data":
-        st.subheader("Sync Data Between SQLite and Firestore")
-        if st.button("Sync from Firestore to SQLite"):
-            cursor.execute("DELETE FROM products")
-            conn.commit()
-            products = db.collection("products").stream()
-            for product in products:
-                data = product.to_dict()
-                cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (data["category"], data["sub_category"], data["product_name"], data["product_link"], data["likes"], data["comments"], data["rating"], data["supplier_orders"], data["supplier_price"], data["store_price"]))
-            conn.commit()
-            st.success("Data synced from Firestore to SQLite!")
-            st.rerun()
+        selected_category = st.selectbox("Select Category to Modify", ["Select"] + df_categories["category"].tolist())
+        
+        if selected_category != "Select":
+            category_id = df_categories[df_categories["category"] == selected_category]["id"].values[0]
+            new_category_name = st.text_input("Rename Category", selected_category)
+            if st.button("Update Category"):
+                cursor.execute("UPDATE categories SET category = ? WHERE id = ?", (new_category_name, category_id))
+                conn.commit()
+                db.collection("categories").document(selected_category).delete()
+                db.collection("categories").document(new_category_name).set({"name": new_category_name})
+                st.success("Category updated successfully!")
+                st.rerun()
+            
+            if st.button("Delete Category"):
+                cursor.execute("DELETE FROM categories WHERE id = ?", (category_id,))
+                cursor.execute("DELETE FROM subcategories WHERE category_id = ?", (category_id,))
+                conn.commit()
+                db.collection("categories").document(selected_category).delete()
+                st.warning("Category deleted successfully!")
+                st.rerun()
+            
+            new_subcategory = st.text_input("Add Subcategory")
+            if st.button("Add Subcategory"):
+                cursor.execute("INSERT OR IGNORE INTO subcategories (category_id, sub_category) VALUES (?, ?)", (category_id, new_subcategory))
+                conn.commit()
+                db.collection("categories").document(selected_category).collection("subcategories").document(new_subcategory).set({"name": new_subcategory})
+                st.success("Subcategory added successfully!")
+                st.rerun()
+            
+            df_subcategories = pd.read_sql_query("SELECT * FROM subcategories WHERE category_id = ?", conn, params=(category_id,))
+            selected_subcategory = st.selectbox("Select Subcategory to Modify", ["Select"] + df_subcategories["sub_category"].tolist())
+            
+            if selected_subcategory != "Select":
+                new_subcategory_name = st.text_input("Rename Subcategory", selected_subcategory)
+                if st.button("Update Subcategory"):
+                    cursor.execute("UPDATE subcategories SET sub_category = ? WHERE sub_category = ?", (new_subcategory_name, selected_subcategory))
+                    conn.commit()
+                    db.collection("categories").document(selected_category).collection("subcategories").document(selected_subcategory).delete()
+                    db.collection("categories").document(selected_category).collection("subcategories").document(new_subcategory_name).set({"name": new_subcategory_name})
+                    st.success("Subcategory updated successfully!")
+                    st.rerun()
+                
+                if st.button("Delete Subcategory"):
+                    cursor.execute("DELETE FROM subcategories WHERE sub_category = ?", (selected_subcategory,))
+                    conn.commit()
+                    db.collection("categories").document(selected_category).collection("subcategories").document(selected_subcategory).delete()
+                    st.warning("Subcategory deleted successfully!")
+                    st.rerun()
 
 if __name__ == "__main__":
     main()
