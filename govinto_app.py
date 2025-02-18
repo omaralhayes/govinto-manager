@@ -3,10 +3,9 @@ import pandas as pd
 import sqlite3
 import firebase_admin
 from firebase_admin import credentials, firestore
-import openpyxl
 import json
 
-# Load Firebase credentials from Streamlit Secrets
+# تحميل بيانات Firebase من Streamlit Secrets
 try:
     firebase_config = {
         "type": st.secrets["firebase_type"],
@@ -26,14 +25,14 @@ try:
         firebase_admin.initialize_app(cred)
     db = firestore.client()
 except Exception as e:
-    st.error(f"\u274C خطأ: فشل تحميل بيانات Firebase. تأكد من إدخال القيم الصحيحة في Streamlit Secrets. التفاصيل: {e}")
+    st.error(f"❌ خطأ: فشل تحميل بيانات Firebase. تأكد من إدخال القيم الصحيحة في Streamlit Secrets. التفاصيل: {e}")
     st.stop()
 
-# Connect to SQLite
+# الاتصال بقاعدة بيانات SQLite
 conn = sqlite3.connect("govinto_products.db", check_same_thread=False)
 cursor = conn.cursor()
 
-# Create tables if they don't exist
+# إنشاء الجداول إذا لم تكن موجودة
 cursor.execute('''CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY AUTOINCREMENT, category TEXT UNIQUE)''')
 cursor.execute('''CREATE TABLE IF NOT EXISTS subcategories (id INTEGER PRIMARY KEY AUTOINCREMENT, category_id INTEGER, sub_category TEXT UNIQUE, FOREIGN KEY(category_id) REFERENCES categories(id))''')
 cursor.execute('''CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY AUTOINCREMENT, category TEXT, sub_category TEXT, product_name TEXT, product_link TEXT, likes INTEGER, comments INTEGER, rating REAL, supplier_orders INTEGER, supplier_price REAL, store_price REAL)''')
@@ -47,6 +46,7 @@ def main():
     
     st.title("Govinto Product Management")
 
+    # 🛒 **إضافة منتج جديد**
     if choice == "Add Product":
         st.subheader("Add New Product")
         df_categories = pd.read_sql_query("SELECT * FROM categories", conn)
@@ -72,16 +72,17 @@ def main():
         if st.button("Add Product") and selected_category != "Select" and selected_subcategory != "Select":
             cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (selected_category, selected_subcategory, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price))
             conn.commit()
-            st.success("Product added successfully!")
+            st.success("✅ Product added successfully!")
             st.rerun()
     
+    # 🗂 **إدارة الفئات والفئات الفرعية**
     elif choice == "Manage Categories":
         st.subheader("Manage Categories and Subcategories")
         new_category = st.text_input("Add New Category")
         if st.button("Add Category"):
             cursor.execute("INSERT OR IGNORE INTO categories (category) VALUES (?)", (new_category,))
             conn.commit()
-            st.success("Category added successfully!")
+            st.success("✅ Category added successfully!")
             st.rerun()
         
         categories = [row[0] for row in cursor.execute("SELECT category FROM categories").fetchall()]
@@ -92,9 +93,10 @@ def main():
             if st.button("Add Subcategory"):
                 cursor.execute("INSERT OR IGNORE INTO subcategories (category_id, sub_category) VALUES ((SELECT id FROM categories WHERE category = ?), ?)", (selected_category, new_subcategory))
                 conn.commit()
-                st.success("Subcategory added successfully!")
+                st.success("✅ Subcategory added successfully!")
                 st.rerun()
 
+    # 🔄 **مزامنة البيانات بين Firestore و SQLite**
     elif choice == "Sync Data":
         st.subheader("Sync Data Between SQLite and Firestore")
         
@@ -106,7 +108,7 @@ def main():
                 data = product.to_dict()
                 cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (data["category"], data["sub_category"], data["product_name"], data["product_link"], data["likes"], data["comments"], data["rating"], data["supplier_orders"], data["supplier_price"], data["store_price"]))
             conn.commit()
-            st.success("Data synced from Firestore to SQLite!")
+            st.success("✅ Data synced from Firestore to SQLite!")
             st.rerun()
 
 if __name__ == "__main__":
