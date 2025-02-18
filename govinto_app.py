@@ -46,7 +46,7 @@ def main():
     
     st.title("Govinto Product Management")
 
-    # 🛒 **إضافة منتج جديد**
+    # 🛂 **إضافة منتج جديد**
     if choice == "Add Product":
         st.subheader("Add New Product")
         df_categories = pd.read_sql_query("SELECT * FROM categories", conn)
@@ -75,7 +75,7 @@ def main():
             st.success("✅ Product added successfully!")
             st.rerun()
     
-    # 🗂 **إدارة الفئات والفئات الفرعية**
+    # 🛠 **إدارة الفئات والفئات الفرعية**
     elif choice == "Manage Categories":
         st.subheader("Manage Categories and Subcategories")
         new_category = st.text_input("Add New Category")
