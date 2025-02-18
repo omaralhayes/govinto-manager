@@ -83,39 +83,30 @@ def main():
             conn.commit()
             st.success("Category added successfully!")
             st.rerun()
-    
-    elif choice == "View Products":
-        st.subheader("All Products")
-        df = pd.read_sql_query("SELECT * FROM products", conn)
-        st.dataframe(df)
         
-        if st.button("Delete All Products"):
+        categories = [row[0] for row in cursor.execute("SELECT category FROM categories").fetchall()]
+        selected_category = st.selectbox("Select Category", ["Select"] + categories)
+        
+        if selected_category != "Select":
+            new_subcategory = st.text_input("Add Subcategory")
+            if st.button("Add Subcategory"):
+                cursor.execute("INSERT OR IGNORE INTO subcategories (category_id, sub_category) VALUES ((SELECT id FROM categories WHERE category = ?), ?)", (selected_category, new_subcategory))
+                conn.commit()
+                st.success("Subcategory added successfully!")
+                st.rerun()
+
+    elif choice == "Sync Data":
+        st.subheader("Sync Data Between SQLite and Firestore")
+        
+        if st.button("Sync from Firestore to SQLite"):
             cursor.execute("DELETE FROM products")
             conn.commit()
-            st.success("All products deleted successfully!")
-            st.rerun()
-    
-    elif choice == "Import/Export Data":
-        st.subheader("Import & Export Data")
-        
-        # Export Data
-        st.write("### Export Products to CSV")
-        df = pd.read_sql_query("SELECT * FROM products", conn)
-        file_name = "govinto_products.csv"
-        df.to_csv(file_name, index=False)
-        st.download_button("Download CSV File", open(file_name, "rb"), file_name=file_name)
-        
-        # Import Data
-        st.write("### Import Products from CSV")
-        uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
-        
-        if uploaded_file is not None:
-            df_uploaded = pd.read_csv(uploaded_file)
-            for _, row in df_uploaded.iterrows():
-                cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-                               (row["category"], row["sub_category"], row["product_name"], row["product_link"], row["likes"], row["comments"], row["rating"], row["supplier_orders"], row["supplier_price"], row["store_price"]))
+            products = db.collection("products").stream()
+            for product in products:
+                data = product.to_dict()
+                cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (data["category"], data["sub_category"], data["product_name"], data["product_link"], data["likes"], data["comments"], data["rating"], data["supplier_orders"], data["supplier_price"], data["store_price"]))
             conn.commit()
-            st.success("Products imported successfully!")
+            st.success("Data synced from Firestore to SQLite!")
             st.rerun()
 
 if __name__ == "__main__":
