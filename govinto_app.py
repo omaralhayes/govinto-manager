@@ -34,7 +34,7 @@ cursor = conn.cursor()
 
 # إنشاء الجداول إذا لم تكن موجودة
 cursor.execute('''CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY AUTOINCREMENT, category TEXT UNIQUE)''')
-cursor.execute('''CREATE TABLE IF NOT EXISTS subcategories (id INTEGER PRIMARY KEY AUTOINCREMENT, category_id INTEGER, sub_category TEXT UNIQUE, FOREIGN KEY(category_id) REFERENCES categories(id))''')
+cursor.execute('''CREATE TABLE IF NOT EXISTS subcategories (id INTEGER PRIMARY KEY AUTOINCREMENT, category_id INTEGER, sub_category TEXT UNIQUE, FOREIGN KEY(category_id) REFERENCES categories(id) ON DELETE CASCADE)''')
 cursor.execute('''CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY AUTOINCREMENT, category TEXT, sub_category TEXT, product_name TEXT, product_link TEXT, likes INTEGER, comments INTEGER, rating REAL, supplier_orders INTEGER, supplier_price REAL, store_price REAL)''')
 conn.commit()
 
@@ -46,7 +46,7 @@ def main():
     
     st.title("Govinto Product Management")
 
-    # 🛒 **إضافة منتج جديد**
+    # 🛍 **إضافة منتج جديد**
     if choice == "Add Product":
         st.subheader("Add New Product")
         df_categories = pd.read_sql_query("SELECT * FROM categories", conn)
@@ -79,37 +79,32 @@ def main():
     elif choice == "Manage Categories":
         st.subheader("Manage Categories and Subcategories")
         new_category = st.text_input("Add New Category")
-        if st.button("Add Category"):
+        if st.button("Add Category") and new_category:
             cursor.execute("INSERT OR IGNORE INTO categories (category) VALUES (?)", (new_category,))
             conn.commit()
             st.success("✅ Category added successfully!")
             st.rerun()
         
-        categories = [row[0] for row in cursor.execute("SELECT category FROM categories").fetchall()]
-        selected_category = st.selectbox("Select Category", ["Select"] + categories)
-        
+        categories = pd.read_sql_query("SELECT * FROM categories", conn)
+        selected_category = st.selectbox("Select Category", ["Select"] + categories["category"].tolist())
+
         if selected_category != "Select":
+            category_id = categories[categories["category"] == selected_category]["id"].values[0]
+
+            # حذف الفئة والفئات الفرعية المرتبطة بها
+            if st.button("Delete Category"):
+                cursor.execute("DELETE FROM categories WHERE id = ?", (category_id,))
+                conn.commit()
+                st.warning("⚠️ Category and its subcategories deleted!")
+                st.rerun()
+
+            # إضافة فئة فرعية مرتبطة بالفئة المحددة
             new_subcategory = st.text_input("Add Subcategory")
-            if st.button("Add Subcategory"):
-                cursor.execute("INSERT OR IGNORE INTO subcategories (category_id, sub_category) VALUES ((SELECT id FROM categories WHERE category = ?), ?)", (selected_category, new_subcategory))
+            if st.button("Add Subcategory") and new_subcategory:
+                cursor.execute("INSERT OR IGNORE INTO subcategories (category_id, sub_category) VALUES (?, ?)", (category_id, new_subcategory))
                 conn.commit()
                 st.success("✅ Subcategory added successfully!")
                 st.rerun()
-
-    # 🔄 **مزامنة البيانات بين Firestore و SQLite**
-    elif choice == "Sync Data":
-        st.subheader("Sync Data Between SQLite and Firestore")
-        
-        if st.button("Sync from Firestore to SQLite"):
-            cursor.execute("DELETE FROM products")
-            conn.commit()
-            products = db.collection("products").stream()
-            for product in products:
-                data = product.to_dict()
-                cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (data["category"], data["sub_category"], data["product_name"], data["product_link"], data["likes"], data["comments"], data["rating"], data["supplier_orders"], data["supplier_price"], data["store_price"]))
-            conn.commit()
-            st.success("✅ Data synced from Firestore to SQLite!")
-            st.rerun()
 
 if __name__ == "__main__":
     main()
