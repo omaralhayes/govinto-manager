@@ -167,8 +167,9 @@ if "updated_at" not in columns:
 cursor.execute("SELECT updated_at FROM products WHERE product_name = ?", (product_name,))
 row = cursor.fetchone()
 
-            if row:
-                updated_at_sqlite = datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")
+if row:
+    updated_at_sqlite = datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")
+
                 if updated_at_firestore > updated_at_sqlite:
                     # 🔹 تحديث المنتج في SQLite إذا كان هناك تحديث أحدث
                     cursor.execute("""
