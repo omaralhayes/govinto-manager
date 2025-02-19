@@ -133,6 +133,15 @@ def import_export_data():
         st.success("✅ Data imported successfully without duplicates!")
         st.rerun()
 
+# 🔍 فحص بنية الجدول والتأكد من وجود العمود `updated_at`
+cursor.execute("PRAGMA table_info(products)")
+columns_info = cursor.fetchall()
+
+st.write("🔍 **Table Structure:**")
+for column in columns_info:
+    st.write(f"🟢 Column: {column[1]}, Type: {column[2]}")
+
+from datetime import datetime
 
 def sync_data():
     """مزامنة البيانات بين Firestore و SQLite بطريقة أكثر ذكاءً"""
@@ -157,8 +166,6 @@ if "updated_at" not in columns:
 
 cursor.execute("SELECT updated_at FROM products WHERE product_name = ?", (product_name,))
 row = cursor.fetchone()
-
-            row = cursor.fetchone()
 
             if row:
                 updated_at_sqlite = datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")
