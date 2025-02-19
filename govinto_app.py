@@ -60,16 +60,6 @@ def add_product():
         st.success("✅ Product added successfully!")
         st.rerun()
 
-def manage_categories():
-    """إدارة الفئات والفئات الفرعية"""
-    st.subheader("Manage Categories and Subcategories")
-    new_category = st.text_input("Add New Category")
-    if st.button("Add Category") and new_category:
-        cursor.execute("INSERT OR IGNORE INTO categories (category) VALUES (?)", (new_category,))
-        conn.commit()
-        st.success("✅ Category added successfully!")
-        st.rerun()
-
 def view_products():
     """عرض المنتجات"""
     st.subheader("View Products")
