@@ -145,16 +145,14 @@ def main():
 
     
 
-    if choice == "Manage Categories":
-        manage_categories()
+     if choice == "Add Product":
+    add_product()
     elif choice == "View Products":
         view_products()
     elif choice == "Import/Export Data":
         import_export_data()
     elif choice == "Sync Data":
         sync_data()
-    if choice == "Add Product":
-    add_product()
 
 if __name__ == "__main__":
     main()
