@@ -138,7 +138,8 @@ def sync_data():
         for doc in products_ref:
             data = doc.to_dict()
             product_name = data["product_name"]
-            updated_at_firestore = datetime.strptime(data["updated_at"], "%Y-%m-%d %H:%M:%S")
+            updated_at_firestore = datetime.strptime(data.get("updated_at", "2000-01-01 00:00:00"), "%Y-%m-%d %H:%M:%S")
+
 
             # 🔍 تحقق مما إذا كان المنتج موجودًا في SQLite
             cursor.execute("SELECT updated_at FROM products WHERE product_name = ?", (product_name,))
