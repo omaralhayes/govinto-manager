@@ -152,25 +152,26 @@ def sync_data():
         st.success("✅ Synced from Firestore!")
 
     # ✅ إضافة زر "Sync to Firestore" لمزامنة البيانات من SQLite إلى Firestore
-    if st.button("Sync to Firestore"):
-        df_products = pd.read_sql_query("SELECT * FROM products", conn)
-        for _, row in df_products.iterrows():
-            doc_ref = db.collection("products").document(row["product_name"])
-doc_ref.set({
-    "category": row["category"],
-    "sub_category": row["sub_category"],
-    "product_name": row["product_name"],
-    "product_link": row["product_link"],
-    "likes": row["likes"],
-    "comments": row["comments"],
-    "rating": row["rating"],
-    "supplier_orders": row["supplier_orders"],
-    "supplier_price": row["supplier_price"],
-    "store_price": row["store_price"],
-    "updated_at": row["updated_at"]
-})
+if st.button("Sync to Firestore"):
+    df_products = pd.read_sql_query("SELECT * FROM products", conn)
+    for _, row in df_products.iterrows():
+        doc_ref = db.collection("products").document(row["product_name"])
+        doc_ref.set({
+            "category": row["category"],
+            "sub_category": row["sub_category"],
+            "product_name": row["product_name"],
+            "product_link": row["product_link"],
+            "likes": row["likes"],
+            "comments": row["comments"],
+            "rating": row["rating"],
+            "supplier_orders": row["supplier_orders"],
+            "supplier_price": row["supplier_price"],
+            "store_price": row["store_price"],
+            "updated_at": row["updated_at"]
+        })
+    
+    st.success("✅ Synced to Firestore!")  # ✅ خارج الحلقة بعد الانتهاء من جميع العمليات
 
-        st.success("✅ Synced to Firestore!")
 
 def add_product():
     """إضافة منتج جديد"""
