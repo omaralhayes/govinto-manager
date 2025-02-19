@@ -65,7 +65,7 @@ def manage_categories():
 
 
 def view_products():
-    """عرض المنتجات من Firestore باستخدام st.dataframe() بنفس تنسيق الجدول المرفق"""
+    """عرض المنتجات من Firestore باستخدام st.dataframe() مع تحسينات تجربة المستخدم"""
     st.subheader("📦 View Products")
 
     # ✅ جلب جميع المنتجات من Firestore
@@ -80,10 +80,8 @@ def view_products():
                         "rating", "supplier_orders", "likes", "comments",
                         "supplier_price", "store_price", "updated_at"]
 
-        # ✅ التأكد من أن جميع الأعمدة موجودة وإضافة القيم الافتراضية إذا كانت مفقودة
-        for col in column_order:
-            if col not in df_products.columns:
-                df_products[col] = "N/A"
+        # ✅ التأكد من أن جميع الأعمدة موجودة وإزالة الأعمدة الفارغة
+        df_products = df_products.dropna(how="all")  # حذف أي صف يحتوي على جميع القيم فارغة
 
         # ✅ إعادة ترتيب الأعمدة
         df_products = df_products[column_order]
@@ -96,6 +94,27 @@ def view_products():
             'text-align': 'center',  # محاذاة النصوص
             'font-size': '14px'  # حجم الخط داخل الخلايا
         }), width=1800, height=600)
+
+        # ✅ إضافة خيار حذف منتج معين من الجدول
+        st.write("### 🗑️ Delete a Product")
+        product_names = df_products["product_name"].tolist()
+        selected_product = st.selectbox("Select a product to delete", ["Select"] + product_names)
+
+        if st.button("🗑️ Delete Product") and selected_product != "Select":
+            db.collection("products").document(selected_product).delete()
+            st.warning(f"⚠️ Product '{selected_product}' deleted successfully!")
+            st.rerun()
+
+        # ✅ زر لحذف جميع المنتجات مع تأكيد قبل الحذف
+        st.write("### ⚠ Delete All Products")
+        if st.button("⚠ Delete ALL Products"):
+            st.warning("⚠ Are you sure you want to delete ALL products? This action cannot be undone!")
+            if st.button("✅ Confirm Delete All", key="confirm_delete_all"):
+                docs = db.collection("products").stream()
+                for doc in docs:
+                    doc.reference.delete()
+                st.error("⚠ All products have been deleted!")
+                st.rerun()
 
     else:
         st.info("❌ No products available.")
