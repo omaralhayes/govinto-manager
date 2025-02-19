@@ -113,13 +113,39 @@ def sync_data():
             cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link) VALUES (?, ?, ?, ?)", (data["category"], data["sub_category"], data["product_name"], data["product_link"]))
         conn.commit()
         st.success("✅ Synced from Firestore!")
+def add_product():
+    """إضافة منتج جديد"""
+    st.subheader("Add New Product")
+    df_categories = pd.read_sql_query("SELECT * FROM categories", conn)
+    category_options = df_categories["category"].tolist()
+    selected_category = st.selectbox("Select Product Category", ["Select"] + category_options)
+
+    subcategory_options = []
+    if selected_category != "Select":
+        category_id = df_categories[df_categories["category"] == selected_category]["id"].values[0]
+        df_subcategories = pd.read_sql_query("SELECT sub_category FROM subcategories WHERE category_id = ?", conn, params=(category_id,))
+        subcategory_options = df_subcategories["sub_category"].tolist()
+
+    selected_subcategory = st.selectbox("Select Subcategory", ["Select"] + subcategory_options)
+    product_name = st.text_input("Product Name")
+    product_link = st.text_input("Product Link")
+
+    if st.button("Add Product") and selected_category != "Select" and selected_subcategory != "Select":
+        cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link) VALUES (?, ?, ?, ?)", 
+                       (selected_category, selected_subcategory, product_name, product_link))
+        conn.commit()
+        st.success("✅ Product added successfully!")
+        st.rerun()
 
 def main():
     st.sidebar.image("govinto_logo.png", use_container_width=True)
     st.sidebar.title("Menu")
     menu = ["Add Product", "Manage Categories", "View Products", "Import/Export Data", "Sync Data"]
     choice = st.sidebar.radio("Select an option", menu)
-    
+if choice == "Add Product":
+    add_product()
+
+  
     if choice == "Manage Categories":
         manage_categories()
     elif choice == "View Products":
