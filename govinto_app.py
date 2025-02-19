@@ -64,7 +64,7 @@ def manage_categories():
 
 
 def view_products():
-    """عرض المنتجات من Firestore فقط"""
+    """عرض المنتجات من Firestore مع إمكانية حذف منتج معين أو حذف جميع المنتجات"""
     st.subheader("View Products")
 
     products_ref = db.collection("products").stream()
@@ -72,9 +72,33 @@ def view_products():
 
     if products:
         df_products = pd.DataFrame(products)
-        st.dataframe(df_products)
+
+        # ✅ عرض المنتجات كجدول مع زر حذف بجانب كل منتج
+        st.write("### Product List")
+        for index, row in df_products.iterrows():
+            col1, col2, col3 = st.columns([3, 2, 1])
+
+            col1.text(f"📦 {row['product_name']}")
+            col2.text(f"💰 {row['store_price']} USD")
+
+            if col3.button("🗑️ Delete", key=f"delete_{row['product_name']}"):
+                db.collection("products").document(row["product_name"]).delete()
+                st.warning(f"⚠️ Product '{row['product_name']}' deleted successfully!")
+                st.rerun()
+
+        # ✅ زر لحذف جميع المنتجات مع تأكيد قبل الحذف
+        st.write("### Delete All Products")
+        if st.button("⚠ Delete ALL Products"):
+            if st.button("✅ Confirm Delete All", key="confirm_delete_all"):
+                docs = db.collection("products").stream()
+                for doc in docs:
+                    doc.reference.delete()
+                st.error("⚠ All products have been deleted!")
+                st.rerun()
+
     else:
-        st.info("لا توجد منتجات متاحة")
+        st.info("❌ No products available.")
+
 
 
 
