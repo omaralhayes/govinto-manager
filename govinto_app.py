@@ -137,8 +137,17 @@ def sync_data():
         cursor.execute("DELETE FROM products")
         for doc in products_ref:
             data = doc.to_dict()
-            cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link) VALUES (?, ?, ?, ?)", 
-                           (data["category"], data["sub_category"], data["product_name"], data["product_link"]))
+            cursor.execute("""
+    INSERT INTO products (category, sub_category, product_name, product_link, 
+    likes, comments, rating, supplier_orders, supplier_price, store_price, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+""", (
+    data["category"], data["sub_category"], data["product_name"], data["product_link"],
+    data.get("likes", 0), data.get("comments", 0), data.get("rating", 0.0),
+    data.get("supplier_orders", 0), data.get("supplier_price", 0.0),
+    data.get("store_price", 0.0), data.get("updated_at", "2000-01-01 00:00:00")
+))
+
         conn.commit()
         st.success("✅ Synced from Firestore!")
 
@@ -147,12 +156,20 @@ def sync_data():
         df_products = pd.read_sql_query("SELECT * FROM products", conn)
         for _, row in df_products.iterrows():
             doc_ref = db.collection("products").document(row["product_name"])
-            doc_ref.set({
-                "category": row["category"],
-                "sub_category": row["sub_category"],
-                "product_name": row["product_name"],
-                "product_link": row["product_link"]
-            })
+doc_ref.set({
+    "category": row["category"],
+    "sub_category": row["sub_category"],
+    "product_name": row["product_name"],
+    "product_link": row["product_link"],
+    "likes": row["likes"],
+    "comments": row["comments"],
+    "rating": row["rating"],
+    "supplier_orders": row["supplier_orders"],
+    "supplier_price": row["supplier_price"],
+    "store_price": row["store_price"],
+    "updated_at": row["updated_at"]
+})
+
         st.success("✅ Synced to Firestore!")
 
 def add_product():
