@@ -140,30 +140,68 @@ def view_products():
 
 def import_export_data():
     """استيراد وتصدير البيانات إلى Firestore"""
-    st.subheader("Import/Export Data")
+    st.subheader("📤 Import/Export Data")
 
-    if st.button("Export Data"):
+    # ✅ تصدير البيانات بتنسيق مطابق لـ View Products
+    if st.button("📥 Export Data (CSV)"):
         products_ref = db.collection("products").stream()
         products = [doc.to_dict() for doc in products_ref]
         df_products = pd.DataFrame(products)
-        df_products.to_csv("products_export.csv", index=False)
+
+        # ✅ ترتيب الأعمدة بنفس ترتيب `view_products()`
+        column_order = ["category", "sub_category", "product_name", "product_link",
+                        "rating", "supplier_orders", "likes", "comments",
+                        "supplier_price", "store_price", "updated_at"]
+        
+        # ✅ التأكد من أن جميع الأعمدة موجودة وإضافة القيم الافتراضية إذا كانت مفقودة
+        for col in column_order:
+            if col not in df_products.columns:
+                df_products[col] = "N/A"
+
+        # ✅ إعادة ترتيب الأعمدة بنفس ترتيب `View Products`
+        df_products = df_products[column_order]
+
+        # ✅ حفظ الملف بصيغة CSV مع ترميز UTF-8 لدعم النصوص العربية
+        csv_file = "products_export.csv"
+        df_products.to_csv(csv_file, index=False, encoding="utf-8-sig")
+
+        # ✅ توفير رابط تحميل الملف بعد التصدير
+        with open(csv_file, "rb") as f:
+            st.download_button(
+                label="📥 Download Exported CSV",
+                data=f,
+                file_name="products_export.csv",
+                mime="text/csv"
+            )
+
         st.success("✅ Data exported successfully!")
 
-    uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
+    # ✅ استيراد البيانات من ملف CSV
+    uploaded_file = st.file_uploader("📂 Upload CSV File", type=["csv"])
     if uploaded_file is not None:
         df_uploaded = pd.read_csv(uploaded_file)
 
-        for _, row in df_uploaded.iterrows():
-            db.collection("products").document(row["product_name"]).set({
-                "category": row["category"], "sub_category": row["sub_category"],
-                "product_name": row["product_name"], "product_link": row["product_link"],
-                "likes": row["likes"], "comments": row["comments"], "rating": row["rating"],
-                "supplier_orders": row["supplier_orders"], "supplier_price": row["supplier_price"],
-                "store_price": row["store_price"], "updated_at": row["updated_at"]
-            })
-        
-        st.success("✅ Data imported successfully!")
-        st.rerun()
+        # ✅ التحقق من أن جميع الحقول المطلوبة موجودة
+        required_fields = {"category", "sub_category", "product_name", "product_link",
+                           "rating", "supplier_orders", "likes", "comments",
+                           "supplier_price", "store_price", "updated_at"}
+
+        if not required_fields.issubset(set(df_uploaded.columns)):
+            st.error("❌ The uploaded file is missing required columns!")
+        else:
+            # ✅ إدراج البيانات إلى Firestore
+            for _, row in df_uploaded.iterrows():
+                db.collection("products").document(row["product_name"]).set({
+                    "category": row["category"], "sub_category": row["sub_category"],
+                    "product_name": row["product_name"], "product_link": row["product_link"],
+                    "likes": int(row["likes"]), "comments": int(row["comments"]), 
+                    "rating": float(row["rating"]), "supplier_orders": int(row["supplier_orders"]),
+                    "supplier_price": float(row["supplier_price"]), "store_price": float(row["store_price"]),
+                    "updated_at": row["updated_at"]
+                })
+
+            st.success("✅ Data imported successfully!")
+            st.rerun()
 
 
 
