@@ -144,8 +144,7 @@ def main():
     choice = st.sidebar.radio("Select an option", menu)
 
     
-    if choice == "Add Product":
-    add_product()
+
     if choice == "Manage Categories":
         manage_categories()
     elif choice == "View Products":
@@ -154,6 +153,8 @@ def main():
         import_export_data()
     elif choice == "Sync Data":
         sync_data()
+    if choice == "Add Product":
+    add_product()
 
 if __name__ == "__main__":
     main()
