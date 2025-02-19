@@ -70,24 +70,24 @@ def view_products():
 
     # ✅ جلب جميع المنتجات من Firestore
     products_ref = db.collection("products").stream()
-    products = [doc.to_dict() for doc in products_ref]
+    products = [{**doc.to_dict(), "id": doc.id} for doc in products_ref]  # إضافة ID المنتج داخليًا
 
     if products:
         df_products = pd.DataFrame(products)
 
-        # ✅ ترتيب الأعمدة ليكون متوافقًا مع الجدول المرفق
+        # ✅ ترتيب الأعمدة ليكون متوافقًا مع الجدول المرفق (مع إخفاء `id`)
         column_order = ["category", "sub_category", "product_name", "product_link",
                         "rating", "supplier_orders", "likes", "comments",
                         "supplier_price", "store_price", "updated_at"]
 
-        # ✅ التأكد من أن جميع الأعمدة موجودة وإزالة الأعمدة الفارغة
+        # ✅ التأكد من أن جميع الأعمدة موجودة وإزالة الصفوف الفارغة
         df_products = df_products.dropna(how="all")  # حذف أي صف يحتوي على جميع القيم فارغة
 
-        # ✅ إعادة ترتيب الأعمدة
-        df_products = df_products[column_order]
+        # ✅ إزالة الأعمدة الفارغة من العرض، وإخفاء `id` من الجدول الظاهر
+        df_display = df_products[column_order]  # لا يتم عرض `id` في الجدول
 
         # ✅ عرض الجدول باستخدام `st.dataframe()` مع تفعيل التمرير الأفقي
-        st.dataframe(df_products.style.set_properties(**{
+        st.dataframe(df_display.style.set_properties(**{
             'background-color': '#F3F6FB',  # لون الخلفية كما في الجدول المرفق
             'color': 'black',  # لون النص
             'border': '1px solid #6C7A89',  # لون الإطار
@@ -95,14 +95,16 @@ def view_products():
             'font-size': '14px'  # حجم الخط داخل الخلايا
         }), width=1800, height=600)
 
-        # ✅ إضافة خيار حذف منتج معين من الجدول
+        # ✅ إضافة خيار حذف منتج معين من الجدول باستخدام `id` بدلاً من `product_name`
         st.write("### 🗑️ Delete a Product")
-        product_names = df_products["product_name"].tolist()
-        selected_product = st.selectbox("Select a product to delete", ["Select"] + product_names)
+        product_options = df_products.set_index("product_name")["id"].to_dict()  # ربط الاسم بـ ID
 
-        if st.button("🗑️ Delete Product") and selected_product != "Select":
-            db.collection("products").document(selected_product).delete()
-            st.warning(f"⚠️ Product '{selected_product}' deleted successfully!")
+        selected_product_name = st.selectbox("Select a product to delete", ["Select"] + list(product_options.keys()))
+
+        if st.button("🗑️ Delete Product") and selected_product_name != "Select":
+            product_id = product_options[selected_product_name]
+            db.collection("products").document(product_id).delete()
+            st.warning(f"⚠️ Product '{selected_product_name}' deleted successfully!")
             st.rerun()
 
         # ✅ زر لحذف جميع المنتجات مع تأكيد قبل الحذف
@@ -118,8 +120,6 @@ def view_products():
 
     else:
         st.info("❌ No products available.")
-
-
 
 
 
