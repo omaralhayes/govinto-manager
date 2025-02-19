@@ -65,7 +65,7 @@ def manage_categories():
 
 
 def view_products():
-    """عرض المنتجات من Firestore مع تصميم داكن وألوان متناسقة"""
+    """عرض المنتجات من Firestore مع تصميم مريح وألوان مناسبة للوضع الداكن"""
     st.subheader("📦 View Products")
 
     # جلب جميع المنتجات من Firestore
@@ -79,7 +79,7 @@ def view_products():
         column_order = ["category", "sub_category", "product_name", "product_link",
                         "rating", "supplier_orders", "likes", "comments",
                         "supplier_price", "store_price", "updated_at"]
-        
+
         # ✅ التأكد من أن جميع الأعمدة موجودة وإضافة القيم الافتراضية إذا كانت مفقودة
         for col in column_order:
             if col not in df_products.columns:
@@ -88,25 +88,25 @@ def view_products():
         # ✅ إعادة ترتيب الأعمدة
         df_products = df_products[column_order]
 
-        # ✅ تحسين تصميم الجدول باستخدام Plotly
+        # ✅ تحسين تصميم الجدول باستخدام Plotly مع إمكانية التمرير الأفقي
         fig = go.Figure(data=[go.Table(
-            columnwidth=[2, 2, 3, 4, 1, 1, 1, 1, 1, 1, 2],  # ضبط حجم الأعمدة
+            columnwidth=[2.5, 2.5, 3, 5, 1.5, 1.5, 1.5, 1.5, 2, 2, 3],  # ضبط حجم الأعمدة
             header=dict(
                 values=[f"<b>{col.replace('_', ' ').title()}</b>" for col in column_order],
-                fill_color="#1F2937",  # لون العنوان (رمادي داكن)
+                fill_color="#202124",  # لون العنوان (رمادي داكن)
                 font=dict(color="white", size=16),  # لون النص في العناوين
                 align="left"
             ),
             cells=dict(
                 values=[df_products[col] for col in column_order],
-                fill=dict(color=[["#374151"] * len(df_products)]),  # خلفية مريحة للعين بلون رمادي داكن
+                fill=dict(color=[["#303134"] * len(df_products)]),  # خلفية مريحة للعين بلون رمادي غامق
                 font=dict(color="white", size=14),  # لون النص في الخلايا
                 align="left"
             )
         )])
 
-        # ✅ تكبير حجم الجدول وجعله متناسقًا مع الوضع الداكن
-        st.plotly_chart(fig, use_container_width=True, height=700)  
+        # ✅ تكبير الجدول مع إضافة شريط تمرير أفقي عند الحاجة
+        st.plotly_chart(fig, use_container_width=True, height=800)  
 
         # ✅ إضافة خيار حذف منتج معين من الجدول
         st.write("### 🗑️ Delete a Product")
