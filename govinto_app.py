@@ -34,8 +34,9 @@ cursor = conn.cursor()
 def manage_categories():
     """إدارة الفئات والفئات الفرعية"""
     st.subheader("Manage Categories and Subcategories")
+    
     new_category = st.text_input("Add New Category")
-    if st.button("Add Category") and new_category:
+    if st.button("Add Category") and new_category.strip():
         cursor.execute("INSERT OR IGNORE INTO categories (category) VALUES (?)", (new_category,))
         conn.commit()
         st.success("✅ Category added successfully!")
@@ -46,37 +47,47 @@ def manage_categories():
     
     if selected_category != "Select":
         category_id = categories[categories["category"] == selected_category]["id"].values[0]
-        
+
         new_subcategory = st.text_input("Add Subcategory")
-        if st.button("Add Subcategory") and new_subcategory:
+        if st.button("Add Subcategory") and new_subcategory.strip():
             cursor.execute("INSERT INTO subcategories (category_id, sub_category) VALUES (?, ?)", (category_id, new_subcategory))
             conn.commit()
             st.success("✅ Subcategory added successfully!")
             st.rerun()
-        
+
         df_subcategories = pd.read_sql_query("SELECT id, sub_category FROM subcategories WHERE category_id = ?", conn, params=(category_id,))
         st.write("### Subcategories")
+
         for index, row in df_subcategories.iterrows():
             col1, col2, col3 = st.columns([3, 1, 1])
             new_name = col1.text_input("Edit Subcategory", row["sub_category"], key=f"edit_{row['id']}")
-            if col2.button("Save", key=f"save_{row['id']}") and new_name.strip():
-                cursor.execute("UPDATE subcategories SET sub_category = ? WHERE id = ?", (new_name, row["id"]))
-                conn.commit()
-                st.success("✅ Subcategory updated successfully!")
-                st.rerun()
+
+            # ✅ عرض زر "Save" فقط عند تغيير اسم الفئة الفرعية
+            if new_name.strip() and new_name != row["sub_category"]:
+                if col2.button("Save", key=f"save_{row['id']}"):
+                    cursor.execute("UPDATE subcategories SET sub_category = ? WHERE id = ?", (new_name, row["id"]))
+                    conn.commit()
+                    st.success("✅ Subcategory updated successfully!")
+                    st.rerun()
+
+            # ✅ إضافة رسالة تأكيد عند حذف الفئات الفرعية
             if col3.button("🗑️ Delete", key=f"delete_{row['id']}"):
-                cursor.execute("DELETE FROM subcategories WHERE id = ?", (row["id"],))
-                conn.commit()
-                st.warning("⚠️ Subcategory deleted!")
-                st.rerun()
-        
+                if st.confirm("Are you sure you want to delete this subcategory?"):
+                    cursor.execute("DELETE FROM subcategories WHERE id = ?", (row["id"],))
+                    conn.commit()
+                    st.warning("⚠️ Subcategory deleted!")
+                    st.rerun()
+
+        # ✅ إضافة رسالة تأكيد عند حذف الفئات
         if st.button("Delete Category"):
-            cursor.execute("DELETE FROM subcategories WHERE category_id = ?", (category_id,))
-            cursor.execute("DELETE FROM products WHERE category = ?", (selected_category,))
-            cursor.execute("DELETE FROM categories WHERE id = ?", (category_id,))
-            conn.commit()
-            st.warning("⚠️ Category and its subcategories/products deleted!")
-            st.rerun()
+            if st.confirm(f"Are you sure you want to delete the category '{selected_category}' and all its subcategories?"):
+                cursor.execute("DELETE FROM subcategories WHERE category_id = ?", (category_id,))
+                cursor.execute("DELETE FROM products WHERE category = ?", (selected_category,))
+                cursor.execute("DELETE FROM categories WHERE id = ?", (category_id,))
+                conn.commit()
+                st.warning(f"⚠️ Category '{selected_category}' and its subcategories/products deleted!")
+                st.rerun()
+
 
 def view_products():
     """عرض المنتجات"""
