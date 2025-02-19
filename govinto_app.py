@@ -142,8 +142,7 @@ def main():
     st.sidebar.title("Menu")
     menu = ["Add Product", "Manage Categories", "View Products", "Import/Export Data", "Sync Data"]
     choice = st.sidebar.radio("Select an option", menu)
-if choice == "Add Product":
-    add_product()
+
 
   
     if choice == "Manage Categories":
