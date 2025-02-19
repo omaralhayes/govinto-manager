@@ -34,7 +34,7 @@ cursor = conn.cursor()
 
 # إنشاء الجداول إذا لم تكن موجودة
 cursor.execute('''CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY AUTOINCREMENT, category TEXT UNIQUE)''')
-cursor.execute('''CREATE TABLE IF NOT EXISTS subcategories (id INTEGER PRIMARY KEY AUTOINCREMENT, category_id INTEGER, sub_category TEXT UNIQUE, FOREIGN KEY(category_id) REFERENCES categories(id) ON DELETE CASCADE)''')
+cursor.execute('''CREATE TABLE IF NOT EXISTS subcategories (id INTEGER PRIMARY KEY AUTOINCREMENT, category_id INTEGER, sub_category TEXT UNIQUE, FOREIGN KEY(category_id) REFERENCES categories(id))''')
 cursor.execute('''CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY AUTOINCREMENT, category TEXT, sub_category TEXT, product_name TEXT, product_link TEXT, likes INTEGER, comments INTEGER, rating REAL, supplier_orders INTEGER, supplier_price REAL, store_price REAL)''')
 conn.commit()
 
@@ -94,7 +94,7 @@ def main():
             if st.button("Delete Category"):
                 cursor.execute("DELETE FROM categories WHERE category = ?", (selected_category,))
                 conn.commit()
-                st.warning("⚠️ Category and associated subcategories deleted!")
+                st.warning("⚠️ Category deleted!")
                 st.rerun()
 
     # 📋 **عرض جميع المنتجات**
