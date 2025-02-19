@@ -67,28 +67,43 @@ def view_products():
     """عرض المنتجات من Firestore مع إمكانية حذف منتج معين أو حذف جميع المنتجات"""
     st.subheader("View Products")
 
+    # جلب جميع المنتجات من Firestore
     products_ref = db.collection("products").stream()
     products = [doc.to_dict() for doc in products_ref]
 
     if products:
         df_products = pd.DataFrame(products)
 
-        # ✅ عرض المنتجات كجدول مع زر حذف بجانب كل منتج
+        # ✅ التأكد من عرض جميع الحقول في الجدول
+        expected_columns = ["category", "sub_category", "product_name", "product_link",
+                            "likes", "comments", "rating", "supplier_orders",
+                            "supplier_price", "store_price", "updated_at"]
+        
+        for col in expected_columns:
+            if col not in df_products.columns:
+                df_products[col] = "N/A"  # ملء القيم غير الموجودة
+
+        df_products.fillna("N/A", inplace=True)  # تجنب الأخطاء الناتجة عن القيم الفارغة
+
+        # ✅ عرض جميع الحقول في جدول متكامل
         st.write("### Product List")
-        for index, row in df_products.iterrows():
-            col1, col2, col3 = st.columns([3, 2, 1])
+        st.dataframe(df_products)
 
-            col1.text(f"📦 {row['product_name']}")
-            col2.text(f"💰 {row['store_price']} USD")
+        # ✅ إضافة خيار حذف منتج معين من الجدول
+        st.write("### Delete a Product")
+        product_names = df_products["product_name"].tolist()
 
-            if col3.button("🗑️ Delete", key=f"delete_{row['product_name']}"):
-                db.collection("products").document(row["product_name"]).delete()
-                st.warning(f"⚠️ Product '{row['product_name']}' deleted successfully!")
-                st.rerun()
+        selected_product = st.selectbox("Select a product to delete", ["Select"] + product_names)
+
+        if st.button("🗑️ Delete Product") and selected_product != "Select":
+            db.collection("products").document(selected_product).delete()
+            st.warning(f"⚠️ Product '{selected_product}' deleted successfully!")
+            st.rerun()
 
         # ✅ زر لحذف جميع المنتجات مع تأكيد قبل الحذف
         st.write("### Delete All Products")
         if st.button("⚠ Delete ALL Products"):
+            st.warning("⚠ Are you sure you want to delete ALL products? This action cannot be undone!")
             if st.button("✅ Confirm Delete All", key="confirm_delete_all"):
                 docs = db.collection("products").stream()
                 for doc in docs:
