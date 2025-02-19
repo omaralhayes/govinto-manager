@@ -172,10 +172,10 @@ if row:
 
     if updated_at_firestore > updated_at_sqlite:
         # 🔹 تحديث المنتج في SQLite إذا كان هناك تحديث أحدث
-        cursor.execute("""
+                cursor.execute("""
             UPDATE products SET category = ?, sub_category = ?, product_link = ?, 
             likes = ?, comments = ?, rating = ?, supplier_orders = ?, 
-            supplier_price = ?, store_price, updated_at = ?
+            supplier_price = ?, store_price = ?, updated_at = ?
             WHERE product_name = ?
         """, (
             data["category"], data["sub_category"], data["product_link"],
@@ -183,7 +183,6 @@ if row:
             data["supplier_price"], data["store_price"], data["updated_at"], product_name
         ))
 
-                    ))
             else:
                 # 🆕 إدراج المنتج الجديد في SQLite
                 cursor.execute("""
