@@ -90,22 +90,12 @@ def manage_categories():
 
 
 def view_products():
-    """عرض المنتجات مع إمكانية الحذف والتصدير"""
+    """عرض المنتجات مع إمكانية الحذف"""
     st.subheader("View Products")
 
     df_products = pd.read_sql_query("SELECT * FROM products", conn)
 
     if not df_products.empty:
-        # 🟢 زر تصدير المنتجات إلى CSV
-        csv = df_products.to_csv(index=False).encode("utf-8")
-        st.download_button(
-            label="📥 Download Products as CSV",
-            data=csv,
-            file_name="products.csv",
-            mime="text/csv",
-        )
-
-        # 🟢 عرض المنتجات مع إمكانية الحذف
         for index, row in df_products.iterrows():
             col1, col2 = st.columns([5, 1])
             col1.text(row["product_name"])  # عرض اسم المنتج
@@ -117,6 +107,7 @@ def view_products():
                     st.rerun()
     else:
         st.info("لا توجد منتجات متاحة")
+
 
 
 def import_export_data():
