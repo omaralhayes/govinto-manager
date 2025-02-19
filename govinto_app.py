@@ -72,7 +72,7 @@ def manage_categories():
 
             # ✅ إضافة رسالة تأكيد عند حذف الفئات الفرعية
             if col3.button("🗑️ Delete", key=f"delete_{row['id']}"):
-                if st.confirm("Are you sure you want to delete this subcategory?"):
+                if st.button(f"Confirm Delete {row['sub_category']}", key=f"confirm_delete_{row['id']}"):
                     cursor.execute("DELETE FROM subcategories WHERE id = ?", (row["id"],))
                     conn.commit()
                     st.warning("⚠️ Subcategory deleted!")
@@ -80,7 +80,7 @@ def manage_categories():
 
         # ✅ إضافة رسالة تأكيد عند حذف الفئات
         if st.button("Delete Category"):
-            if st.confirm(f"Are you sure you want to delete the category '{selected_category}' and all its subcategories?"):
+            if st.button(f"Confirm Delete {selected_category}", key=f"confirm_delete_category_{category_id}"):
                 cursor.execute("DELETE FROM subcategories WHERE category_id = ?", (category_id,))
                 cursor.execute("DELETE FROM products WHERE category = ?", (selected_category,))
                 cursor.execute("DELETE FROM categories WHERE id = ?", (category_id,))
