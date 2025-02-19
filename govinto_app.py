@@ -145,13 +145,20 @@ def add_product():
     selected_subcategory = st.selectbox("Select Subcategory", ["Select"] + subcategory_options)
     product_name = st.text_input("Product Name")
     product_link = st.text_input("Product Link")
+    likes = st.number_input("Likes", min_value=0, step=1)
+    comments = st.number_input("Comments", min_value=0, step=1)
+    rating = st.slider("Rating", 0.0, 5.0, 0.1)
+    supplier_orders = st.number_input("Supplier Orders", min_value=0, step=1)
+    supplier_price = st.number_input("Supplier Price (USD)", min_value=0.0, step=0.1)
+    store_price = st.number_input("Store Price (USD)", min_value=0.0, step=0.1)
 
     if st.button("Add Product") and selected_category != "Select" and selected_subcategory != "Select":
-        cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link) VALUES (?, ?, ?, ?)", 
-                       (selected_category, selected_subcategory, product_name, product_link))
+        cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                       (selected_category, selected_subcategory, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price))
         conn.commit()
         st.success("✅ Product added successfully!")
         st.rerun()
+
 
 def main():
     st.sidebar.image("govinto_logo.png", use_container_width=True)
