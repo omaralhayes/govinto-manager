@@ -158,52 +158,46 @@ def sync_data():
 
             # 🔍 تحقق مما إذا كان المنتج موجودًا في SQLite
             cursor.execute("PRAGMA table_info(products)")
-columns = [column[1] for column in cursor.fetchall()]
+            columns = [column[1] for column in cursor.fetchall()]
 
-if "updated_at" not in columns:
-    try:
-        cursor.execute("ALTER TABLE products ADD COLUMN updated_at TEXT DEFAULT '2000-01-01 00:00:00'")
-        conn.commit()
-        st.success("✅ Column 'updated_at' added successfully!")
-    except sqlite3.OperationalError:
-        st.warning("⚠️ Column 'updated_at' already exists. Skipping modification.")
+            if "updated_at" not in columns:
+                try:
+                    cursor.execute("ALTER TABLE products ADD COLUMN updated_at TEXT DEFAULT '2000-01-01 00:00:00'")
+                    conn.commit()
+                    st.success("✅ Column 'updated_at' added successfully!")
+                except sqlite3.OperationalError:
+                    st.warning("⚠️ Column 'updated_at' already exists. Skipping modification.")
 
-for doc in products_ref:
-    data = doc.to_dict()
-    product_name = data["product_name"]  # ✅ التأكد من أن `product_name` معرف
-    
-    cursor.execute("SELECT updated_at FROM products WHERE product_name = ?", (product_name,))
-    row = cursor.fetchone()
+            cursor.execute("SELECT updated_at FROM products WHERE product_name = ?", (product_name,))
+            row = cursor.fetchone()
 
+            if row:
+                updated_at_sqlite = datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")
 
-if row:
-    updated_at_sqlite = datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")
+                if updated_at_firestore > updated_at_sqlite:
+                    # 🔹 تحديث المنتج في SQLite إذا كان هناك تحديث أحدث
+                    cursor.execute("""
+                        UPDATE products SET category = ?, sub_category = ?, product_link = ?, 
+                        likes = ?, comments = ?, rating = ?, supplier_orders = ?, 
+                        supplier_price = ?, store_price = ?, updated_at = ?
+                        WHERE product_name = ?
+                    """, (
+                        data["category"], data["sub_category"], data["product_link"],
+                        data["likes"], data["comments"], data["rating"], data["supplier_orders"],
+                        data["supplier_price"], data["store_price"], data["updated_at"], product_name
+                    ))
 
-    if updated_at_firestore > updated_at_sqlite:
-        # 🔹 تحديث المنتج في SQLite إذا كان هناك تحديث أحدث
+            else:
+                # 🆕 إدراج المنتج الجديد في SQLite
                 cursor.execute("""
-            UPDATE products SET category = ?, sub_category = ?, product_link = ?, 
-            likes = ?, comments = ?, rating = ?, supplier_orders = ?, 
-            supplier_price = ?, store_price = ?, updated_at = ?
-            WHERE product_name = ?
-        """, (
-            data["category"], data["sub_category"], data["product_link"],
-            data["likes"], data["comments"], data["rating"], data["supplier_orders"],
-            data["supplier_price"], data["store_price"], data["updated_at"], product_name
-        ))
-
-    else:
-        # 🆕 إدراج المنتج الجديد في SQLite
-        cursor.execute("""
-            INSERT INTO products (category, sub_category, product_name, product_link, 
-            likes, comments, rating, supplier_orders, supplier_price, store_price, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            data["category"], data["sub_category"], product_name, data["product_link"],
-            data["likes"], data["comments"], data["rating"], data["supplier_orders"],
-            data["supplier_price"], data["store_price"], data["updated_at"]
-        ))
-
+                    INSERT INTO products (category, sub_category, product_name, product_link, 
+                    likes, comments, rating, supplier_orders, supplier_price, store_price, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    data["category"], data["sub_category"], product_name, data["product_link"],
+                    data["likes"], data["comments"], data["rating"], data["supplier_orders"],
+                    data["supplier_price"], data["store_price"], data["updated_at"]
+                ))
 
         conn.commit()
         st.success("✅ Synced from Firestore successfully!")
