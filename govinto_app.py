@@ -63,6 +63,30 @@ def add_product():
         st.success("✅ Product added successfully!")
         st.rerun()
 
+def manage_categories():
+    """ إدارة الفئات والفئات الفرعية """
+    st.subheader("Manage Categories and Subcategories")
+    new_category = st.text_input("Add New Category")
+    if st.button("Add Category") and new_category:
+        cursor.execute("INSERT OR IGNORE INTO categories (category) VALUES (?)", (new_category,))
+        conn.commit()
+        st.success("✅ Category added successfully!")
+        st.rerun()
+    
+    categories = pd.read_sql_query("SELECT * FROM categories", conn)
+    selected_category = st.selectbox("Select Category", ["Select"] + categories["category"].tolist())
+    
+    if selected_category != "Select":
+        category_id = categories[categories["category"] == selected_category]["id"].values[0]
+        
+        if st.button("Delete Category"):
+            cursor.execute("DELETE FROM subcategories WHERE category_id = ?", (category_id,))
+            cursor.execute("DELETE FROM products WHERE category = ?", (selected_category,))
+            cursor.execute("DELETE FROM categories WHERE id = ?", (category_id,))
+            conn.commit()
+            st.warning("⚠️ Category and its subcategories/products deleted!")
+            st.rerun()
+
 def view_products():
     """ عرض المنتجات """
     st.subheader("View Products")
