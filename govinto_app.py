@@ -74,25 +74,27 @@ def view_products():
     if products:
         df_products = pd.DataFrame(products)
 
-        # ✅ التأكد من عرض جميع الحقول في الجدول
-        expected_columns = ["category", "sub_category", "product_name", "product_link",
-                            "likes", "comments", "rating", "supplier_orders",
-                            "supplier_price", "store_price", "updated_at"]
+        # ✅ ترتيب الأعمدة حسب الترتيب المطلوب
+        column_order = ["category", "sub_category", "product_name", "product_link",
+                        "rating", "supplier_orders", "likes", "comments",
+                        "supplier_price", "store_price", "updated_at"]
         
-        for col in expected_columns:
+        # ✅ التأكد من أن جميع الأعمدة موجودة وإضافة القيم الافتراضية إذا كانت مفقودة
+        for col in column_order:
             if col not in df_products.columns:
-                df_products[col] = "N/A"  # ملء القيم غير الموجودة
+                df_products[col] = "N/A"
 
-        df_products.fillna("N/A", inplace=True)  # تجنب الأخطاء الناتجة عن القيم الفارغة
+        # ✅ إعادة ترتيب الأعمدة
+        df_products = df_products[column_order]
 
         # ✅ عرض جميع الحقول في جدول متكامل
         st.write("### Product List")
+        df_products.fillna("N/A", inplace=True)  # تجنب الأخطاء الناتجة عن القيم الفارغة
         st.dataframe(df_products)
 
         # ✅ إضافة خيار حذف منتج معين من الجدول
         st.write("### Delete a Product")
         product_names = df_products["product_name"].tolist()
-
         selected_product = st.selectbox("Select a product to delete", ["Select"] + product_names)
 
         if st.button("🗑️ Delete Product") and selected_product != "Select":
