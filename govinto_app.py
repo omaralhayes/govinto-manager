@@ -125,32 +125,91 @@ def import_export_data():
         st.rerun()
 
 
-def sync_data():
-    """مزامنة البيانات بين Firestore و SQLite"""
-    st.subheader("Sync Data")
+from datetime import datetime
 
-    if st.button("Sync from Firestore"):
+def sync_data():
+    """مزامنة البيانات بين Firestore و SQLite بطريقة أكثر ذكاءً"""
+    st.subheader("🔄 Sync Data")
+
+    # 1️⃣ 🔹 مزامنة من Firestore إلى SQLite باستخدام `updated_at`
+    if st.button("⬇ Sync from Firestore"):
         products_ref = db.collection("products").stream()
-        cursor.execute("DELETE FROM products")
+        
         for doc in products_ref:
             data = doc.to_dict()
-            cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link) VALUES (?, ?, ?, ?)", 
-                           (data["category"], data["sub_category"], data["product_name"], data["product_link"]))
-        conn.commit()
-        st.success("✅ Synced from Firestore!")
+            product_name = data["product_name"]
+            updated_at_firestore = datetime.strptime(data["updated_at"], "%Y-%m-%d %H:%M:%S")
 
-    # ✅ إضافة زر "Sync to Firestore" لمزامنة البيانات من SQLite إلى Firestore
-    if st.button("Sync to Firestore"):
+            # 🔍 تحقق مما إذا كان المنتج موجودًا في SQLite
+            cursor.execute("SELECT updated_at FROM products WHERE product_name = ?", (product_name,))
+            row = cursor.fetchone()
+
+            if row:
+                updated_at_sqlite = datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")
+                if updated_at_firestore > updated_at_sqlite:
+                    # 🔹 تحديث المنتج في SQLite إذا كان هناك تحديث أحدث
+                    cursor.execute("""
+                        UPDATE products SET category = ?, sub_category = ?, product_link = ?, 
+                        likes = ?, comments = ?, rating = ?, supplier_orders = ?, 
+                        supplier_price = ?, store_price = ?, updated_at = ?
+                        WHERE product_name = ?
+                    """, (
+                        data["category"], data["sub_category"], data["product_link"],
+                        data["likes"], data["comments"], data["rating"], data["supplier_orders"],
+                        data["supplier_price"], data["store_price"], data["updated_at"], product_name
+                    ))
+            else:
+                # 🆕 إدراج المنتج الجديد في SQLite
+                cursor.execute("""
+                    INSERT INTO products (category, sub_category, product_name, product_link, 
+                    likes, comments, rating, supplier_orders, supplier_price, store_price, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    data["category"], data["sub_category"], product_name, data["product_link"],
+                    data["likes"], data["comments"], data["rating"], data["supplier_orders"],
+                    data["supplier_price"], data["store_price"], data["updated_at"]
+                ))
+
+        conn.commit()
+        st.success("✅ Synced from Firestore successfully!")
+
+    # 2️⃣ 🔹 مزامنة من SQLite إلى Firestore باستخدام `batch`
+    if st.button("⬆ Sync to Firestore"):
+        batch = db.batch()
         df_products = pd.read_sql_query("SELECT * FROM products", conn)
+
         for _, row in df_products.iterrows():
-            doc_ref = db.collection("products").document(row["product_name"])
-            doc_ref.set({
-                "category": row["category"],
-                "sub_category": row["sub_category"],
-                "product_name": row["product_name"],
-                "product_link": row["product_link"]
-            })
-        st.success("✅ Synced to Firestore!")
+            product_name = row["product_name"]
+            updated_at_sqlite = row["updated_at"]
+
+            doc_ref = db.collection("products").document(product_name)
+            doc = doc_ref.get()
+
+            if doc.exists:
+                updated_at_firestore = datetime.strptime(doc.to_dict()["updated_at"], "%Y-%m-%d %H:%M:%S")
+
+                if datetime.strptime(updated_at_sqlite, "%Y-%m-%d %H:%M:%S") > updated_at_firestore:
+                    # 🔹 تحديث المنتج في Firestore إذا كان أحدث في SQLite
+                    batch.set(doc_ref, {
+                        "category": row["category"], "sub_category": row["sub_category"],
+                        "product_name": row["product_name"], "product_link": row["product_link"],
+                        "likes": row["likes"], "comments": row["comments"], "rating": row["rating"],
+                        "supplier_orders": row["supplier_orders"], "supplier_price": row["supplier_price"],
+                        "store_price": row["store_price"], "updated_at": row["updated_at"]
+                    })
+            else:
+                # 🆕 إدراج المنتج الجديد في Firestore
+                batch.set(doc_ref, {
+                    "category": row["category"], "sub_category": row["sub_category"],
+                    "product_name": row["product_name"], "product_link": row["product_link"],
+                    "likes": row["likes"], "comments": row["comments"], "rating": row["rating"],
+                    "supplier_orders": row["supplier_orders"], "supplier_price": row["supplier_price"],
+                    "store_price": row["store_price"], "updated_at": row["updated_at"]
+                })
+
+        batch.commit()
+        st.success("✅ Synced to Firestore successfully!")
+
 
 def add_product():
     """إضافة منتج جديد"""
