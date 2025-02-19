@@ -30,6 +30,15 @@ except Exception as e:
 # الاتصال بقاعدة بيانات SQLite
 conn = sqlite3.connect("govinto_products.db", check_same_thread=False)
 cursor = conn.cursor()
+# 🔍 التأكد من أن جدول المنتجات يحتوي على عمود `updated_at`
+cursor.execute("PRAGMA table_info(products)")
+columns = [column[1] for column in cursor.fetchall()]
+
+if "updated_at" not in columns:
+    cursor.execute("ALTER TABLE products ADD COLUMN updated_at TEXT DEFAULT '2000-01-01 00:00:00'")
+    conn.commit()
+    st.success("✅ Column 'updated_at' added successfully!")
+
 
 def manage_categories():
     """إدارة الفئات والفئات الفرعية"""
@@ -148,7 +157,16 @@ def sync_data():
             updated_at_firestore = datetime.strptime(data["updated_at"], "%Y-%m-%d %H:%M:%S")
 
             # 🔍 تحقق مما إذا كان المنتج موجودًا في SQLite
-            cursor.execute("SELECT updated_at FROM products WHERE product_name = ?", (product_name,))
+            cursor.execute("PRAGMA table_info(products)")
+columns = [column[1] for column in cursor.fetchall()]
+
+if "updated_at" not in columns:
+    cursor.execute("ALTER TABLE products ADD COLUMN updated_at TEXT DEFAULT '2000-01-01 00:00:00'")
+    conn.commit()
+
+cursor.execute("SELECT updated_at FROM products WHERE product_name = ?", (product_name,))
+row = cursor.fetchone()
+
             row = cursor.fetchone()
 
             if row:
