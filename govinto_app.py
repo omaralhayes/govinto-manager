@@ -237,7 +237,8 @@ def main():
     """واجهة التطبيق الرئيسية مع تحسين تجربة المستخدم وإضافة زر 'Add to Home Screen'."""
     
     # ✅ شعار المتجر في القائمة الجانبية
-    st.sidebar.image("govinto_logo.png", use_column_width=True)
+    st.sidebar.image("govinto_logo.png", use_container_width=True)
+
     
     # ✅ قائمة التنقل الجانبية
     st.sidebar.title("📌 Menu")
