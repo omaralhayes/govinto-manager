@@ -183,17 +183,18 @@ if row:
             data["supplier_price"], data["store_price"], data["updated_at"], product_name
         ))
 
-            else:
-                # 🆕 إدراج المنتج الجديد في SQLite
-                cursor.execute("""
-                    INSERT INTO products (category, sub_category, product_name, product_link, 
-                    likes, comments, rating, supplier_orders, supplier_price, store_price, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    data["category"], data["sub_category"], product_name, data["product_link"],
-                    data["likes"], data["comments"], data["rating"], data["supplier_orders"],
-                    data["supplier_price"], data["store_price"], data["updated_at"]
-                ))
+    else:
+        # 🆕 إدراج المنتج الجديد في SQLite
+        cursor.execute("""
+            INSERT INTO products (category, sub_category, product_name, product_link, 
+            likes, comments, rating, supplier_orders, supplier_price, store_price, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            data["category"], data["sub_category"], product_name, data["product_link"],
+            data["likes"], data["comments"], data["rating"], data["supplier_orders"],
+            data["supplier_price"], data["store_price"], data["updated_at"]
+        ))
+
 
         conn.commit()
         st.success("✅ Synced from Firestore successfully!")
