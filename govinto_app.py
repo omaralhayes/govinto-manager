@@ -1,7 +1,6 @@
 
 import streamlit as st
 import pandas as pd
-import sqlite3
 import firebase_admin
 from firebase_admin import credentials, firestore
 
@@ -28,86 +27,66 @@ except Exception as e:
     st.error(f"❌ خطأ في تحميل Firebase: {e}")
     st.stop()
 
-# الاتصال بقاعدة بيانات SQLite
-conn = sqlite3.connect("govinto_products.db", check_same_thread=False)
-cursor = conn.cursor()
 
 def manage_categories():
-    """إدارة الفئات والفئات الفرعية"""
+    """إدارة الفئات والفئات الفرعية باستخدام Firestore فقط"""
     st.subheader("Manage Categories and Subcategories")
     
+    categories_ref = db.collection("categories")
+
     new_category = st.text_input("Add New Category")
     if st.button("Add Category") and new_category.strip():
-        cursor.execute("INSERT OR IGNORE INTO categories (category) VALUES (?)", (new_category,))
-        conn.commit()
+        categories_ref.document(new_category).set({"category": new_category})
         st.success("✅ Category added successfully!")
         st.rerun()
     
-    categories = pd.read_sql_query("SELECT * FROM categories", conn)
-    selected_category = st.selectbox("Select Category", ["Select"] + categories["category"].tolist())
-    
+    categories = [doc.id for doc in categories_ref.stream()]
+    selected_category = st.selectbox("Select Category", ["Select"] + categories)
+
     if selected_category != "Select":
-        category_id = categories[categories["category"] == selected_category]["id"].values[0]
+        subcategories_ref = db.collection("categories").document(selected_category).collection("subcategories")
 
         new_subcategory = st.text_input("Add Subcategory")
         if st.button("Add Subcategory") and new_subcategory.strip():
-            cursor.execute("INSERT INTO subcategories (category_id, sub_category) VALUES (?, ?)", (category_id, new_subcategory))
-            conn.commit()
+            subcategories_ref.document(new_subcategory).set({"sub_category": new_subcategory})
             st.success("✅ Subcategory added successfully!")
             st.rerun()
 
-        df_subcategories = pd.read_sql_query("SELECT id, sub_category FROM subcategories WHERE category_id = ?", conn, params=(category_id,))
-        st.write("### Subcategories")
+        subcategories = [doc.id for doc in subcategories_ref.stream()]
+        st.write("### Subcategories", subcategories)
 
-        for index, row in df_subcategories.iterrows():
-            col1, col2, col3 = st.columns([3, 1, 1])
-            new_name = col1.text_input("Edit Subcategory", row["sub_category"], key=f"edit_{row['id']}")
-
-            # ✅ عرض زر "Save" فقط عند تغيير اسم الفئة الفرعية
-            if new_name.strip() and new_name != row["sub_category"]:
-                if col2.button("Save", key=f"save_{row['id']}"):
-                    cursor.execute("UPDATE subcategories SET sub_category = ? WHERE id = ?", (new_name, row["id"]))
-                    conn.commit()
-                    st.success("✅ Subcategory updated successfully!")
-                    st.rerun()
-
-            # ✅ إضافة رسالة تأكيد عند حذف الفئات الفرعية
-            if col3.button("🗑️ Delete", key=f"delete_{row['id']}"):
-                if st.button(f"Confirm Delete {row['sub_category']}", key=f"confirm_delete_{row['id']}"):
-                    cursor.execute("DELETE FROM subcategories WHERE id = ?", (row["id"],))
-                    conn.commit()
-                    st.warning("⚠️ Subcategory deleted!")
-                    st.rerun()
-
-        # ✅ إضافة رسالة تأكيد عند حذف الفئات
         if st.button("Delete Category"):
-            if st.button(f"Confirm Delete {selected_category}", key=f"confirm_delete_category_{category_id}"):
-                cursor.execute("DELETE FROM subcategories WHERE category_id = ?", (category_id,))
-                cursor.execute("DELETE FROM products WHERE category = ?", (selected_category,))
-                cursor.execute("DELETE FROM categories WHERE id = ?", (category_id,))
-                conn.commit()
-                st.warning(f"⚠️ Category '{selected_category}' and its subcategories/products deleted!")
-                st.rerun()
+            db.collection("categories").document(selected_category).delete()
+            st.warning(f"⚠️ Category '{selected_category}' and its subcategories deleted!")
+            st.rerun()
+
 
 
 
 def view_products():
-    """عرض المنتجات"""
+    """عرض المنتجات من Firestore فقط"""
     st.subheader("View Products")
-    df_products = pd.read_sql_query("SELECT * FROM products", conn)
-    if not df_products.empty:
+
+    products_ref = db.collection("products").stream()
+    products = [doc.to_dict() for doc in products_ref]
+
+    if products:
+        df_products = pd.DataFrame(products)
         st.dataframe(df_products)
     else:
         st.info("لا توجد منتجات متاحة")
 
 
 
+
 def import_export_data():
-    """استيراد وتصدير البيانات"""
+    """استيراد وتصدير البيانات إلى Firestore"""
     st.subheader("Import/Export Data")
-    
+
     if st.button("Export Data"):
-        df_products = pd.read_sql_query("SELECT * FROM products", conn)
+        products_ref = db.collection("products").stream()
+        products = [doc.to_dict() for doc in products_ref]
+        df_products = pd.DataFrame(products)
         df_products.to_csv("products_export.csv", index=False)
         st.success("✅ Data exported successfully!")
 
@@ -116,60 +95,45 @@ def import_export_data():
         df_uploaded = pd.read_csv(uploaded_file)
 
         for _, row in df_uploaded.iterrows():
-            cursor.execute("""
-                INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price)
-                SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ? 
-                WHERE NOT EXISTS (SELECT 1 FROM products WHERE product_name = ?)
-            """, (row["category"], row["sub_category"], row["product_name"], row["product_link"], 
-                  row["likes"], row["comments"], row["rating"], row["supplier_orders"], 
-                  row["supplier_price"], row["store_price"], row["product_name"]))
-
-        conn.commit()
-        st.success("✅ Data imported successfully without duplicates!")
+            db.collection("products").document(row["product_name"]).set({
+                "category": row["category"], "sub_category": row["sub_category"],
+                "product_name": row["product_name"], "product_link": row["product_link"],
+                "likes": row["likes"], "comments": row["comments"], "rating": row["rating"],
+                "supplier_orders": row["supplier_orders"], "supplier_price": row["supplier_price"],
+                "store_price": row["store_price"], "updated_at": row["updated_at"]
+            })
+        
+        st.success("✅ Data imported successfully!")
         st.rerun()
 
 
+
 def sync_data():
-    """مزامنة البيانات بين Firestore و SQLite"""
-    st.subheader("Sync Data")
+    """مزامنة البيانات بين Firestore فقط"""
+    st.subheader("🔄 Sync Data")
 
-    if st.button("Sync from Firestore"):
+    if st.button("⬇ Sync from Firestore"):
         products_ref = db.collection("products").stream()
-        cursor.execute("DELETE FROM products")
-        for doc in products_ref:
-            data = doc.to_dict()
-            cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link) VALUES (?, ?, ?, ?)", 
-                           (data["category"], data["sub_category"], data["product_name"], data["product_link"]))
-        conn.commit()
-        st.success("✅ Synced from Firestore!")
+        products = [doc.to_dict() for doc in products_ref]
+        st.write("📥 Firestore Data:", products)
+        st.success("✅ Data loaded from Firestore successfully!")
 
-    # ✅ إضافة زر "Sync to Firestore" لمزامنة البيانات من SQLite إلى Firestore
-    if st.button("Sync to Firestore"):
-        df_products = pd.read_sql_query("SELECT * FROM products", conn)
-        for _, row in df_products.iterrows():
-            doc_ref = db.collection("products").document(row["product_name"])
-            doc_ref.set({
-                "category": row["category"],
-                "sub_category": row["sub_category"],
-                "product_name": row["product_name"],
-                "product_link": row["product_link"]
-            })
-        st.success("✅ Synced to Firestore!")
+    if st.button("⬆ Sync to Firestore"):
+        st.success("⚠️ Syncing is now automatic in Firestore and no longer requires manual syncing!")
+
 
 def add_product():
-    """إضافة منتج جديد"""
+    """إضافة منتج جديد مباشرة إلى Firestore"""
     st.subheader("Add New Product")
-    df_categories = pd.read_sql_query("SELECT * FROM categories", conn)
-    category_options = df_categories["category"].tolist()
-    selected_category = st.selectbox("Select Product Category", ["Select"] + category_options)
 
-    subcategory_options = []
+    categories = [doc.id for doc in db.collection("categories").stream()]
+    selected_category = st.selectbox("Select Product Category", ["Select"] + categories)
+
+    subcategories = []
     if selected_category != "Select":
-        category_id = df_categories[df_categories["category"] == selected_category]["id"].values[0]
-        df_subcategories = pd.read_sql_query("SELECT sub_category FROM subcategories WHERE category_id = ?", conn, params=(category_id,))
-        subcategory_options = df_subcategories["sub_category"].tolist()
+        subcategories = [doc.id for doc in db.collection("categories").document(selected_category).collection("subcategories").stream()]
 
-    selected_subcategory = st.selectbox("Select Subcategory", ["Select"] + subcategory_options)
+    selected_subcategory = st.selectbox("Select Subcategory", ["Select"] + subcategories)
     product_name = st.text_input("Product Name")
     product_link = st.text_input("Product Link")
     likes = st.number_input("Likes", min_value=0, step=1)
@@ -180,11 +144,16 @@ def add_product():
     store_price = st.number_input("Store Price (USD)", min_value=0.0, step=0.1)
 
     if st.button("Add Product") and selected_category != "Select" and selected_subcategory != "Select":
-        cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-                       (selected_category, selected_subcategory, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price))
-        conn.commit()
+        db.collection("products").document(product_name).set({
+            "category": selected_category, "sub_category": selected_subcategory,
+            "product_name": product_name, "product_link": product_link,
+            "likes": likes, "comments": comments, "rating": rating,
+            "supplier_orders": supplier_orders, "supplier_price": supplier_price,
+            "store_price": store_price, "updated_at": "2024-01-01 00:00:00"
+        })
         st.success("✅ Product added successfully!")
         st.rerun()
+
 
 
 def main():
