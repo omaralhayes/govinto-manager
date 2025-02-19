@@ -90,17 +90,29 @@ def view_products():
 def import_export_data():
     """استيراد وتصدير البيانات"""
     st.subheader("Import/Export Data")
+    
     if st.button("Export Data"):
         df_products = pd.read_sql_query("SELECT * FROM products", conn)
         df_products.to_csv("products_export.csv", index=False)
         st.success("✅ Data exported successfully!")
-    
+
     uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
     if uploaded_file is not None:
         df_uploaded = pd.read_csv(uploaded_file)
-        df_uploaded.to_sql("products", conn, if_exists="append", index=False)
-        st.success("✅ Data imported successfully!")
+
+        for _, row in df_uploaded.iterrows():
+            cursor.execute("""
+                INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price)
+                SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ? 
+                WHERE NOT EXISTS (SELECT 1 FROM products WHERE product_name = ?)
+            """, (row["category"], row["sub_category"], row["product_name"], row["product_link"], 
+                  row["likes"], row["comments"], row["rating"], row["supplier_orders"], 
+                  row["supplier_price"], row["store_price"], row["product_name"]))
+
+        conn.commit()
+        st.success("✅ Data imported successfully without duplicates!")
         st.rerun()
+
 
 def sync_data():
     """مزامنة البيانات بين Firestore و SQLite"""
