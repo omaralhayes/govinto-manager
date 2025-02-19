@@ -31,38 +31,6 @@ except Exception as e:
 conn = sqlite3.connect("govinto_products.db", check_same_thread=False)
 cursor = conn.cursor()
 
-def add_product():
-    """ إضافة منتج جديد """
-    st.subheader("Add New Product")
-    df_categories = pd.read_sql_query("SELECT * FROM categories", conn)
-    category_options = df_categories["category"].tolist()
-    selected_category = st.selectbox("Select Product Category", ["Select"] + category_options)
-    
-    subcategory_options = []
-    if selected_category != "Select":
-        category_id = df_categories[df_categories["category"] == selected_category]["id"].values[0]
-        df_subcategories = pd.read_sql_query("SELECT sub_category FROM subcategories WHERE category_id = ?", conn, params=(category_id,))
-        subcategory_options = df_subcategories["sub_category"].tolist()
-    
-    selected_subcategory = st.selectbox("Select Subcategory", ["Select"] + subcategory_options)
-    product_name = st.text_input("Product Name")
-    product_link = st.text_input("Product Link")
-    likes = st.number_input("Likes", min_value=0, step=1)
-    comments = st.number_input("Comments", min_value=0, step=1)
-    rating = st.slider("Rating", 0.0, 5.0, 0.1)
-    supplier_orders = st.number_input("Supplier Orders", min_value=0, step=1)
-    supplier_price = st.number_input("Supplier Price (USD)", min_value=0.0, step=0.1)
-    store_price = st.number_input("Store Price (USD)", min_value=0.0, step=0.1)
-    
-    if st.button("Add Product") and selected_category != "Select" and selected_subcategory != "Select":
-        cursor.execute("""
-            INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (selected_category, selected_subcategory, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price))
-        conn.commit()
-        st.success("✅ Product added successfully!")
-        st.rerun()
-
 def manage_categories():
     """ إدارة الفئات والفئات الفرعية """
     st.subheader("Manage Categories and Subcategories")
@@ -96,6 +64,14 @@ def manage_categories():
                 conn.commit()
                 st.warning("⚠️ Subcategory deleted!")
                 st.rerun()
+        
+        if st.button("Delete Category"):
+            cursor.execute("DELETE FROM subcategories WHERE category_id = ?", (category_id,))
+            cursor.execute("DELETE FROM products WHERE category = ?", (selected_category,))
+            cursor.execute("DELETE FROM categories WHERE id = ?", (category_id,))
+            conn.commit()
+            st.warning("⚠️ Category and its subcategories/products deleted!")
+            st.rerun()
 
 def main():
     st.sidebar.image("govinto_logo.png", use_container_width=True)
@@ -103,16 +79,8 @@ def main():
     menu = ["Add Product", "Manage Categories", "View Products", "Import/Export Data", "Sync Data"]
     choice = st.sidebar.radio("Select an option", menu)
     
-    if choice == "Add Product":
-        add_product()
-    elif choice == "Manage Categories":
+    if choice == "Manage Categories":
         manage_categories()
-    elif choice == "Sync Data":
-        st.subheader("Sync Data between Firestore and SQLite")
-        if st.button("Sync from Firestore to SQLite"):
-            sync_from_firestore()
-        if st.button("Sync from SQLite to Firestore"):
-            sync_to_firestore()
 
 if __name__ == "__main__":
     main()
