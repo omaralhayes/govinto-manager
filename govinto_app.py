@@ -3,9 +3,8 @@ import pandas as pd
 import sqlite3
 import firebase_admin
 from firebase_admin import credentials, firestore
-import json
 
-# تحميل بيانات Firebase من Streamlit Secrets
+# تحميل بيانات Firebase
 try:
     firebase_config = {
         "type": st.secrets["firebase_type"],
@@ -25,18 +24,81 @@ try:
         firebase_admin.initialize_app(cred)
     db = firestore.client()
 except Exception as e:
-    st.error(f"❌ خطأ: فشل تحميل بيانات Firebase. تأكد من إدخال القيم الصحيحة في Streamlit Secrets. التفاصيل: {e}")
+    st.error(f"❌ خطأ في تحميل Firebase: {e}")
     st.stop()
 
 # الاتصال بقاعدة بيانات SQLite
 conn = sqlite3.connect("govinto_products.db", check_same_thread=False)
 cursor = conn.cursor()
 
-# إنشاء الجداول إذا لم تكن موجودة
-cursor.execute('''CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY AUTOINCREMENT, category TEXT UNIQUE)''')
-cursor.execute('''CREATE TABLE IF NOT EXISTS subcategories (id INTEGER PRIMARY KEY AUTOINCREMENT, category_id INTEGER, sub_category TEXT UNIQUE, FOREIGN KEY(category_id) REFERENCES categories(id) ON DELETE CASCADE)''')
-cursor.execute('''CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY AUTOINCREMENT, category TEXT, sub_category TEXT, product_name TEXT, product_link TEXT, likes INTEGER, comments INTEGER, rating REAL, supplier_orders INTEGER, supplier_price REAL, store_price REAL)''')
-conn.commit()
+def sync_from_firestore():
+    """ جلب البيانات من Firestore وتحديث SQLite """
+    try:
+        products_ref = db.collection("products").stream()
+        cursor.execute("DELETE FROM products")  # مسح البيانات القديمة لتجنب التكرار
+        for doc in products_ref:
+            data = doc.to_dict()
+            cursor.execute("""
+                INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (data["category"], data["sub_category"], data["product_name"], data["product_link"],
+                 data["likes"], data["comments"], data["rating"], data["supplier_orders"],
+                 data["supplier_price"], data["store_price"]))
+        conn.commit()
+        st.success("✅ تمت مزامنة البيانات من Firestore إلى SQLite بنجاح!")
+    except Exception as e:
+        st.error(f"❌ خطأ في المزامنة من Firestore: {e}")
+
+def sync_to_firestore():
+    """ رفع البيانات من SQLite إلى Firestore """
+    try:
+        df_products = pd.read_sql_query("SELECT * FROM products", conn)
+        for _, row in df_products.iterrows():
+            doc_ref = db.collection("products").document(row["product_name"])
+            doc_ref.set({
+                "category": row["category"],
+                "sub_category": row["sub_category"],
+                "product_name": row["product_name"],
+                "product_link": row["product_link"],
+                "likes": row["likes"],
+                "comments": row["comments"],
+                "rating": row["rating"],
+                "supplier_orders": row["supplier_orders"],
+                "supplier_price": row["supplier_price"],
+                "store_price": row["store_price"]
+            })
+        st.success("✅ تمت مزامنة البيانات من SQLite إلى Firestore بنجاح!")
+    except Exception as e:
+        st.error(f"❌ خطأ في المزامنة إلى Firestore: {e}")
+
+def manage_categories():
+    """ إدارة الفئات والفئات الفرعية """
+    st.subheader("Manage Categories and Subcategories")
+    new_category = st.text_input("Add New Category")
+    if st.button("Add Category") and new_category:
+        cursor.execute("INSERT OR IGNORE INTO categories (category) VALUES (?)", (new_category,))
+        conn.commit()
+        st.success("✅ Category added successfully!")
+        st.rerun()
+    
+    categories = pd.read_sql_query("SELECT * FROM categories", conn)
+    selected_category = st.selectbox("Select Category", ["Select"] + categories["category"].tolist())
+    
+    if selected_category != "Select":
+        category_id = categories[categories["category"] == selected_category]["id"].values[0]
+        
+        if st.button("Delete Category"):
+            cursor.execute("DELETE FROM categories WHERE id = ?", (category_id,))
+            conn.commit()
+            st.warning("⚠️ Category and its subcategories deleted!")
+            st.rerun()
+        
+        new_subcategory = st.text_input("Add Subcategory")
+        if st.button("Add Subcategory") and new_subcategory:
+            cursor.execute("INSERT OR IGNORE INTO subcategories (category_id, sub_category) VALUES (?, ?)", (category_id, new_subcategory))
+            conn.commit()
+            st.success("✅ Subcategory added successfully!")
+            st.rerun()
 
 def main():
     st.sidebar.image("govinto_logo.png", use_container_width=True)
@@ -44,67 +106,14 @@ def main():
     menu = ["Add Product", "Manage Categories", "View Products", "Import/Export Data", "Sync Data"]
     choice = st.sidebar.radio("Select an option", menu)
     
-    st.title("Govinto Product Management")
-
-    # 🛍 **إضافة منتج جديد**
-    if choice == "Add Product":
-        st.subheader("Add New Product")
-        df_categories = pd.read_sql_query("SELECT * FROM categories", conn)
-        category_options = df_categories["category"].tolist()
-        selected_category = st.selectbox("Select Product Category", ["Select"] + category_options)
-        
-        subcategory_options = []
-        if selected_category != "Select":
-            category_id = df_categories[df_categories["category"] == selected_category]["id"].values[0]
-            df_subcategories = pd.read_sql_query("SELECT sub_category FROM subcategories WHERE category_id = ?", conn, params=(category_id,))
-            subcategory_options = df_subcategories["sub_category"].tolist()
-        
-        selected_subcategory = st.selectbox("Select Subcategory", ["Select"] + subcategory_options)
-        product_name = st.text_input("Product Name")
-        product_link = st.text_input("Product Link")
-        likes = st.number_input("Likes", min_value=0, step=1)
-        comments = st.number_input("Comments", min_value=0, step=1)
-        rating = st.slider("Rating", 0.0, 5.0, 0.0, 0.1)
-        supplier_orders = st.number_input("Supplier Orders", min_value=0, step=1)
-        supplier_price = st.number_input("Supplier Price (USD)", min_value=0.0, step=0.1)
-        store_price = st.number_input("Store Price (USD)", min_value=0.0, step=0.1)
-        
-        if st.button("Add Product") and selected_category != "Select" and selected_subcategory != "Select":
-            cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (selected_category, selected_subcategory, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price))
-            conn.commit()
-            st.success("✅ Product added successfully!")
-            st.rerun()
-    
-    # 🗂 **إدارة الفئات والفئات الفرعية**
-    elif choice == "Manage Categories":
-        st.subheader("Manage Categories and Subcategories")
-        new_category = st.text_input("Add New Category")
-        if st.button("Add Category") and new_category:
-            cursor.execute("INSERT OR IGNORE INTO categories (category) VALUES (?)", (new_category,))
-            conn.commit()
-            st.success("✅ Category added successfully!")
-            st.rerun()
-        
-        categories = pd.read_sql_query("SELECT * FROM categories", conn)
-        selected_category = st.selectbox("Select Category", ["Select"] + categories["category"].tolist())
-
-        if selected_category != "Select":
-            category_id = categories[categories["category"] == selected_category]["id"].values[0]
-
-            # حذف الفئة والفئات الفرعية المرتبطة بها
-            if st.button("Delete Category"):
-                cursor.execute("DELETE FROM categories WHERE id = ?", (category_id,))
-                conn.commit()
-                st.warning("⚠️ Category and its subcategories deleted!")
-                st.rerun()
-
-            # إضافة فئة فرعية مرتبطة بالفئة المحددة
-            new_subcategory = st.text_input("Add Subcategory")
-            if st.button("Add Subcategory") and new_subcategory:
-                cursor.execute("INSERT OR IGNORE INTO subcategories (category_id, sub_category) VALUES (?, ?)", (category_id, new_subcategory))
-                conn.commit()
-                st.success("✅ Subcategory added successfully!")
-                st.rerun()
+    if choice == "Manage Categories":
+        manage_categories()
+    elif choice == "Sync Data":
+        st.subheader("Sync Data between Firestore and SQLite")
+        if st.button("Sync from Firestore to SQLite"):
+            sync_from_firestore()
+        if st.button("Sync from SQLite to Firestore"):
+            sync_to_firestore()
 
 if __name__ == "__main__":
     main()
