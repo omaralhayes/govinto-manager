@@ -65,37 +65,37 @@ def manage_categories():
 
 
 def view_products():
-    """عرض المنتجات من Firestore باستخدام st.dataframe() مع تحسينات تجربة المستخدم"""
+    """عرض المنتجات من Firestore بنفس تنسيق الجدول المرفق باستخدام st.dataframe()"""
     st.subheader("📦 View Products")
 
     # ✅ جلب جميع المنتجات من Firestore
     products_ref = db.collection("products").stream()
-    products = [{**doc.to_dict(), "id": doc.id} for doc in products_ref]  # إضافة ID المنتج داخليًا
+    products = [{**doc.to_dict(), "id": doc.id} for doc in products_ref]  # إضافة ID داخليًا للحذف
 
     if products:
         df_products = pd.DataFrame(products)
 
-        # ✅ ترتيب الأعمدة ليكون متوافقًا مع الجدول المرفق (مع إخفاء `id`)
+        # ✅ ترتيب الأعمدة ليطابق الجدول المرفق (مع إخفاء `id`)
         column_order = ["category", "sub_category", "product_name", "product_link",
                         "rating", "supplier_orders", "likes", "comments",
                         "supplier_price", "store_price", "updated_at"]
 
-        # ✅ التأكد من أن جميع الأعمدة موجودة وإزالة الصفوف الفارغة
-        df_products = df_products.dropna(how="all")  # حذف أي صف يحتوي على جميع القيم فارغة
+        # ✅ إزالة الصفوف التي تحتوي على جميع القيم فارغة
+        df_products = df_products.dropna(how="all")
 
         # ✅ إزالة الأعمدة الفارغة من العرض، وإخفاء `id` من الجدول الظاهر
-        df_display = df_products[column_order]  # لا يتم عرض `id` في الجدول
+        df_display = df_products[column_order]
 
-        # ✅ عرض الجدول باستخدام `st.dataframe()` مع تفعيل التمرير الأفقي
+        # ✅ عرض الجدول بنفس تنسيق الجدول في الصورة المرفقة
         st.dataframe(df_display.style.set_properties(**{
-            'background-color': '#F3F6FB',  # لون الخلفية كما في الجدول المرفق
+            'background-color': '#F3F6FB',  # لون الخلفية
             'color': 'black',  # لون النص
             'border': '1px solid #6C7A89',  # لون الإطار
             'text-align': 'center',  # محاذاة النصوص
             'font-size': '14px'  # حجم الخط داخل الخلايا
         }), width=1800, height=600)
 
-        # ✅ إضافة خيار حذف منتج معين من الجدول باستخدام `id` بدلاً من `product_name`
+        # ✅ إضافة خيار حذف منتج معين من الجدول باستخدام `id`
         st.write("### 🗑️ Delete a Product")
         product_options = df_products.set_index("product_name")["id"].to_dict()  # ربط الاسم بـ ID
 
@@ -120,6 +120,7 @@ def view_products():
 
     else:
         st.info("❌ No products available.")
+
 
 
 
