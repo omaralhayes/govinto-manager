@@ -90,13 +90,34 @@ def manage_categories():
 
 
 def view_products():
-    """عرض المنتجات"""
+    """عرض المنتجات مع إمكانية الحذف والتصدير"""
     st.subheader("View Products")
+
     df_products = pd.read_sql_query("SELECT * FROM products", conn)
+
     if not df_products.empty:
-        st.dataframe(df_products)
+        # 🟢 زر تصدير المنتجات إلى CSV
+        csv = df_products.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            label="📥 Download Products as CSV",
+            data=csv,
+            file_name="products.csv",
+            mime="text/csv",
+        )
+
+        # 🟢 عرض المنتجات مع إمكانية الحذف
+        for index, row in df_products.iterrows():
+            col1, col2 = st.columns([5, 1])
+            col1.text(row["product_name"])  # عرض اسم المنتج
+            if col2.button("🗑️ Delete", key=f"delete_{row['id']}"):
+                if st.button(f"Confirm Delete {row['product_name']}", key=f"confirm_delete_{row['id']}"):
+                    cursor.execute("DELETE FROM products WHERE id = ?", (row["id"],))
+                    conn.commit()
+                    st.warning(f"⚠️ Product '{row['product_name']}' deleted!")
+                    st.rerun()
     else:
         st.info("لا توجد منتجات متاحة")
+
 
 def import_export_data():
     """استيراد وتصدير البيانات"""
