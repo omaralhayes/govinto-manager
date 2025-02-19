@@ -135,17 +135,26 @@ def sync_data():
     if st.button("Sync from Firestore"):
         products_ref = db.collection("products").stream()
         cursor.execute("DELETE FROM products")
-        for doc in products_ref:
-            data = doc.to_dict()
-            cursor.execute("""
-    INSERT INTO products (category, sub_category, product_name, product_link, 
-    likes, comments, rating, supplier_orders, supplier_price, store_price, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-""", (
-    data["category"], data["sub_category"], data["product_name"], data["product_link"],
-    data.get("likes", 0), data.get("comments", 0), data.get("rating", 0.0),
-    data.get("supplier_orders", 0), data.get("supplier_price", 0.0),
-    data.get("store_price", 0.0), data.get("updated_at", "2000-01-01 00:00:00")
+for doc in products_ref:
+    data = doc.to_dict()
+    cursor.execute("""
+        INSERT INTO products (category, sub_category, product_name, product_link, 
+        likes, comments, rating, supplier_orders, supplier_price, store_price, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(product_name) DO UPDATE SET 
+        category=excluded.category, sub_category=excluded.sub_category, 
+        product_link=excluded.product_link, likes=excluded.likes, 
+        comments=excluded.comments, rating=excluded.rating, 
+        supplier_orders=excluded.supplier_orders, 
+        supplier_price=excluded.supplier_price, store_price=excluded.store_price, 
+        updated_at=excluded.updated_at;
+    """, (
+        data["category"], data["sub_category"], data["product_name"], data["product_link"],
+        data.get("likes", 0), data.get("comments", 0), data.get("rating", 0.0),
+        data.get("supplier_orders", 0), data.get("supplier_price", 0.0),
+        data.get("store_price", 0.0), data.get("updated_at", "2000-01-01 00:00:00")
+    ))
+
 ))
 
         conn.commit()
@@ -170,7 +179,9 @@ if st.button("Sync to Firestore"):
             "updated_at": row["updated_at"]
         })
     
-    st.success("✅ Synced to Firestore!")  # ✅ خارج الحلقة بعد الانتهاء من جميع العمليات
+    st.success("✅ Synced to Firestore!")  # ✅ الآن في المكان الصحيح خارج الحلقة `for`
+  # ✅ الآن في المكان الصحيح خارج الحلقة `for`
+  # ✅ خارج الحلقة بعد الانتهاء من جميع العمليات
 
 
 def add_product():
