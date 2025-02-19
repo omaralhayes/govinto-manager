@@ -176,7 +176,10 @@ def add_product():
             "product_name": product_name, "product_link": product_link,
             "likes": likes, "comments": comments, "rating": rating,
             "supplier_orders": supplier_orders, "supplier_price": supplier_price,
-            "store_price": store_price, "updated_at": "2024-01-01 00:00:00"
+            "store_price": store_price, from datetime import datetime  # 📌 تأكد من استيراد datetime في أعلى الملف
+
+"updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
         })
         st.success("✅ Product added successfully!")
         st.rerun()
