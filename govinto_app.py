@@ -105,14 +105,30 @@ def import_export_data():
 def sync_data():
     """مزامنة البيانات بين Firestore و SQLite"""
     st.subheader("Sync Data")
+
     if st.button("Sync from Firestore"):
         products_ref = db.collection("products").stream()
         cursor.execute("DELETE FROM products")
         for doc in products_ref:
             data = doc.to_dict()
-            cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link) VALUES (?, ?, ?, ?)", (data["category"], data["sub_category"], data["product_name"], data["product_link"]))
+            cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link) VALUES (?, ?, ?, ?)", 
+                           (data["category"], data["sub_category"], data["product_name"], data["product_link"]))
         conn.commit()
         st.success("✅ Synced from Firestore!")
+
+    # ✅ إضافة زر "Sync to Firestore" لمزامنة البيانات من SQLite إلى Firestore
+    if st.button("Sync to Firestore"):
+        df_products = pd.read_sql_query("SELECT * FROM products", conn)
+        for _, row in df_products.iterrows():
+            doc_ref = db.collection("products").document(row["product_name"])
+            doc_ref.set({
+                "category": row["category"],
+                "sub_category": row["sub_category"],
+                "product_name": row["product_name"],
+                "product_link": row["product_link"]
+            })
+        st.success("✅ Synced to Firestore!")
+
 def add_product():
     """إضافة منتج جديد"""
     st.subheader("Add New Product")
