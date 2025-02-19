@@ -65,7 +65,7 @@ def manage_categories():
 
 
 def view_products():
-    """عرض المنتجات من Firestore مع تصميم عصري وألوان مريحة للعين"""
+    """عرض المنتجات من Firestore مع تصميم داكن وألوان متناسقة"""
     st.subheader("📦 View Products")
 
     # جلب جميع المنتجات من Firestore
@@ -90,22 +90,23 @@ def view_products():
 
         # ✅ تحسين تصميم الجدول باستخدام Plotly
         fig = go.Figure(data=[go.Table(
-            columnwidth=[1.5, 1.5, 2, 3, 1, 1, 1, 1, 1, 1, 2],  # ضبط حجم الأعمدة
+            columnwidth=[2, 2, 3, 4, 1, 1, 1, 1, 1, 1, 2],  # ضبط حجم الأعمدة
             header=dict(
                 values=[f"<b>{col.replace('_', ' ').title()}</b>" for col in column_order],
-                fill_color="#2A9D8F",  # لون العنوان (أخضر فاتح مريح للعين)
-                font=dict(color="white", size=14),  # لون النص في العناوين
+                fill_color="#1F2937",  # لون العنوان (رمادي داكن)
+                font=dict(color="white", size=16),  # لون النص في العناوين
                 align="left"
             ),
             cells=dict(
                 values=[df_products[col] for col in column_order],
-                fill=dict(color=[["#E9F5F2"] * len(df_products)]),  # خلفية مريحة للعين بلون فاتح
-                font=dict(color="black", size=12),  # لون النص في الخلايا
+                fill=dict(color=[["#374151"] * len(df_products)]),  # خلفية مريحة للعين بلون رمادي داكن
+                font=dict(color="white", size=14),  # لون النص في الخلايا
                 align="left"
             )
         )])
 
-        st.plotly_chart(fig, use_container_width=True)  # عرض الجدول
+        # ✅ تكبير حجم الجدول وجعله متناسقًا مع الوضع الداكن
+        st.plotly_chart(fig, use_container_width=True, height=700)  
 
         # ✅ إضافة خيار حذف منتج معين من الجدول
         st.write("### 🗑️ Delete a Product")
