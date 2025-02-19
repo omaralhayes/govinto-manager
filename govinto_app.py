@@ -65,7 +65,7 @@ def manage_categories():
 
 
 def view_products():
-    """عرض المنتجات من Firestore مع تصميم مريح للعين في الوضع الداكن"""
+    """عرض المنتجات من Firestore مع تصميم عصري وألوان مريحة للعين"""
     st.subheader("📦 View Products")
 
     # جلب جميع المنتجات من Firestore
@@ -88,19 +88,19 @@ def view_products():
         # ✅ إعادة ترتيب الأعمدة
         df_products = df_products[column_order]
 
-        # ✅ تصميم الجدول باستخدام Plotly لجعله أكثر جاذبية في الوضع الداكن
+        # ✅ تحسين تصميم الجدول باستخدام Plotly
         fig = go.Figure(data=[go.Table(
             columnwidth=[1.5, 1.5, 2, 3, 1, 1, 1, 1, 1, 1, 2],  # ضبط حجم الأعمدة
             header=dict(
                 values=[f"<b>{col.replace('_', ' ').title()}</b>" for col in column_order],
-                fill_color="#333333",  # لون العنوان (رمادي غامق يناسب الوضع الداكن)
+                fill_color="#2A9D8F",  # لون العنوان (أخضر فاتح مريح للعين)
                 font=dict(color="white", size=14),  # لون النص في العناوين
                 align="left"
             ),
             cells=dict(
                 values=[df_products[col] for col in column_order],
-                fill=dict(color=["#1E1E1E"]),  # لون خلفية الخلايا (رمادي غامق يناسب Dark Mode)
-                font=dict(color="white", size=12),  # لون النص في الخلايا
+                fill=dict(color=[["#E9F5F2"] * len(df_products)]),  # خلفية مريحة للعين بلون فاتح
+                font=dict(color="black", size=12),  # لون النص في الخلايا
                 align="left"
             )
         )])
