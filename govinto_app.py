@@ -65,17 +65,17 @@ def manage_categories():
 
 
 def view_products():
-    """عرض المنتجات من Firestore بنفس تنسيق الجدول المرفق باستخدام st.dataframe()"""
-    st.subheader("📦 View Products")
+    """عرض المنتجات بنفس تصميم الجدول المرفق باستخدام st.dataframe() في Dark Mode"""
+    st.subheader("📦 All Products")
 
     # ✅ جلب جميع المنتجات من Firestore
     products_ref = db.collection("products").stream()
-    products = [{**doc.to_dict(), "id": doc.id} for doc in products_ref]  # إضافة ID داخليًا للحذف
+    products = [{**doc.to_dict(), "id": doc.id} for doc in products_ref]  # إضافة `id` داخليًا للحذف
 
     if products:
         df_products = pd.DataFrame(products)
 
-        # ✅ ترتيب الأعمدة ليطابق الجدول المرفق (مع إخفاء `id`)
+        # ✅ ترتيب الأعمدة ليكون متوافقًا مع الجدول المرفق، مع إخفاء `id`
         column_order = ["category", "sub_category", "product_name", "product_link",
                         "rating", "supplier_orders", "likes", "comments",
                         "supplier_price", "store_price", "updated_at"]
@@ -83,21 +83,24 @@ def view_products():
         # ✅ إزالة الصفوف التي تحتوي على جميع القيم فارغة
         df_products = df_products.dropna(how="all")
 
-        # ✅ إزالة الأعمدة الفارغة من العرض، وإخفاء `id` من الجدول الظاهر
+        # ✅ إخفاء `id` ولكن الاحتفاظ به في الخلفية للحذف
         df_display = df_products[column_order]
 
-        # ✅ عرض الجدول بنفس تنسيق الجدول في الصورة المرفقة
-        st.dataframe(df_display.style.set_properties(**{
-            'background-color': '#F3F6FB',  # لون الخلفية
-            'color': 'black',  # لون النص
-            'border': '1px solid #6C7A89',  # لون الإطار
+        # ✅ تصميم الجدول في الوضع الداكن `Dark Mode`
+        styled_df = df_display.style.set_properties(**{
+            'background-color': '#1E1E1E',  # لون الخلفية غامق
+            'color': 'white',  # لون النص أبيض
+            'border': '1px solid #444',  # لون الإطار رمادي غامق
             'text-align': 'center',  # محاذاة النصوص
             'font-size': '14px'  # حجم الخط داخل الخلايا
-        }), width=1800, height=600)
+        })
+
+        # ✅ عرض الجدول مع التمرير الأفقي
+        st.dataframe(styled_df, width=1400, height=500)
 
         # ✅ إضافة خيار حذف منتج معين من الجدول باستخدام `id`
         st.write("### 🗑️ Delete a Product")
-        product_options = df_products.set_index("product_name")["id"].to_dict()  # ربط الاسم بـ ID
+        product_options = df_products.set_index("product_name")["id"].to_dict()  # ربط الاسم بـ `id`
 
         selected_product_name = st.selectbox("Select a product to delete", ["Select"] + list(product_options.keys()))
 
