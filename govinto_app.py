@@ -60,6 +60,40 @@ def add_product():
         st.success("✅ Product added successfully!")
         st.rerun()
 
+def manage_categories():
+    """إدارة الفئات والفئات الفرعية"""
+    st.subheader("Manage Categories and Subcategories")
+    new_category = st.text_input("Add New Category")
+    if st.button("Add Category") and new_category:
+        cursor.execute("INSERT OR IGNORE INTO categories (category) VALUES (?)", (new_category,))
+        conn.commit()
+        st.success("✅ Category added successfully!")
+        st.rerun()
+
+def view_products():
+    """عرض المنتجات"""
+    st.subheader("View Products")
+    df_products = pd.read_sql_query("SELECT * FROM products", conn)
+    if not df_products.empty:
+        st.dataframe(df_products)
+    else:
+        st.info("لا توجد منتجات متاحة")
+
+def import_export_data():
+    """استيراد وتصدير البيانات"""
+    st.subheader("Import/Export Data")
+    if st.button("Export Data"):
+        df_products = pd.read_sql_query("SELECT * FROM products", conn)
+        df_products.to_csv("products_export.csv", index=False)
+        st.success("✅ Data exported successfully!")
+    
+    uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
+    if uploaded_file is not None:
+        df_uploaded = pd.read_csv(uploaded_file)
+        df_uploaded.to_sql("products", conn, if_exists="append", index=False)
+        st.success("✅ Data imported successfully!")
+        st.rerun()
+
 def sync_data():
     """مزامنة البيانات بين Firestore و SQLite"""
     st.subheader("Sync Data")
@@ -71,13 +105,6 @@ def sync_data():
             cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link, likes, comments, rating, supplier_orders, supplier_price, store_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (data["category"], data["sub_category"], data["product_name"], data["product_link"], data["likes"], data["comments"], data["rating"], data["supplier_orders"], data["supplier_price"], data["store_price"]))
         conn.commit()
         st.success("✅ Synced from Firestore!")
-    
-    if st.button("Sync to Firestore"):
-        df_products = pd.read_sql_query("SELECT * FROM products", conn)
-        for _, row in df_products.iterrows():
-            doc_ref = db.collection("products").document(row["product_name"])
-            doc_ref.set(row.to_dict())
-        st.success("✅ Synced to Firestore!")
 
 def main():
     st.sidebar.image("govinto_logo.png", use_container_width=True)
@@ -87,6 +114,12 @@ def main():
     
     if choice == "Add Product":
         add_product()
+    elif choice == "Manage Categories":
+        manage_categories()
+    elif choice == "View Products":
+        view_products()
+    elif choice == "Import/Export Data":
+        import_export_data()
     elif choice == "Sync Data":
         sync_data()
 
