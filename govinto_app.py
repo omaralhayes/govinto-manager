@@ -124,6 +124,13 @@ def import_export_data():
         st.success("✅ Data imported successfully without duplicates!")
         st.rerun()
 
+# 🔍 فحص بنية الجدول والتأكد من وجود العمود `updated_at`
+cursor.execute("PRAGMA table_info(products)")
+columns_info = cursor.fetchall()
+
+st.write("🔍 **Table Structure:**")
+for column in columns_info:
+    st.write(f"🟢 Column: {column[1]}, Type: {column[2]}")
 
 from datetime import datetime
 
@@ -138,8 +145,7 @@ def sync_data():
         for doc in products_ref:
             data = doc.to_dict()
             product_name = data["product_name"]
-            updated_at_firestore = datetime.strptime(data.get("updated_at", "2000-01-01 00:00:00"), "%Y-%m-%d %H:%M:%S")
-
+            updated_at_firestore = datetime.strptime(data["updated_at"], "%Y-%m-%d %H:%M:%S")
 
             # 🔍 تحقق مما إذا كان المنتج موجودًا في SQLite
             cursor.execute("SELECT updated_at FROM products WHERE product_name = ?", (product_name,))
