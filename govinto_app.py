@@ -65,57 +65,49 @@ def manage_categories():
 
 
 def view_products():
-    """عرض المنتجات من Firestore مع تصميم واسع، تمرير أفقي، وألوان مريحة للوضع الداكن"""
+    """عرض المنتجات من Firestore باستخدام st.dataframe() بنفس التنسيق الداكن"""
     st.subheader("📦 View Products")
 
-    # جلب جميع المنتجات من Firestore
+    # ✅ جلب جميع المنتجات من Firestore
     products_ref = db.collection("products").stream()
-    products = [doc.to_dict() for doc in products_ref]
+    products = [{**doc.to_dict(), "id": doc.id} for doc in products_ref]  # إضافة `id` داخليًا للحذف
 
     if products:
         df_products = pd.DataFrame(products)
 
-        # ✅ ترتيب الأعمدة حسب الترتيب المطلوب
+        # ✅ ترتيب الأعمدة ليكون متوافقًا مع الجدول المرفق، مع إخفاء `id`
         column_order = ["category", "sub_category", "product_name", "product_link",
                         "rating", "supplier_orders", "likes", "comments",
                         "supplier_price", "store_price", "updated_at"]
 
-        # ✅ التأكد من أن جميع الأعمدة موجودة وإضافة القيم الافتراضية إذا كانت مفقودة
-        for col in column_order:
-            if col not in df_products.columns:
-                df_products[col] = "N/A"
+        # ✅ إزالة الصفوف التي تحتوي على جميع القيم فارغة
+        df_products = df_products.dropna(how="all")
 
-        # ✅ إعادة ترتيب الأعمدة
-        df_products = df_products[column_order]
+        # ✅ إخفاء `id` ولكن الاحتفاظ به في الخلفية للحذف
+        df_display = df_products[column_order]
 
-        # ✅ تحسين تصميم الجدول باستخدام Plotly مع إمكانية التمرير الأفقي
-        fig = go.Figure(data=[go.Table(
-            columnwidth=[3, 3, 4, 5, 2, 2, 2, 2, 2, 2, 3],  # ضبط حجم الأعمدة ليكون أوسع
-            header=dict(
-                values=[f"<b>{col.replace('_', ' ').title()}</b>" for col in column_order],
-                fill_color="#1E1E1E",  # لون العنوان (رمادي داكن يناسب Dark Mode)
-                font=dict(color="white", size=18),  # تكبير النصوص في العناوين
-                align="left"
-            ),
-            cells=dict(
-                values=[df_products[col] for col in column_order],
-                fill=dict(color=[["#2E2E2E"] * len(df_products)]),  # لون الخلفية رمادي أفتح قليلاً لمزيد من التباين
-                font=dict(color="white", size=16),  # تكبير النصوص في الخلايا
-                align="left"
-            )
-        )])
+        # ✅ تنسيق الجدول في الوضع الداكن `Dark Mode`
+        styled_df = df_display.style.set_properties(**{
+            'background-color': '#1E1E1E',  # لون الخلفية غامق
+            'color': 'white',  # لون النص أبيض
+            'border': '1px solid #444',  # لون الإطار رمادي غامق
+            'text-align': 'center',  # محاذاة النصوص
+            'font-size': '14px'  # حجم الخط داخل الخلايا
+        })
 
-        # ✅ تكبير الجدول ليكون أكثر وضوحًا، مع إضافة تمرير أفقي عند الحاجة
-        st.plotly_chart(fig, use_container_width=True, height=900)  
+        # ✅ عرض الجدول مع التمرير الأفقي، وفرز وبحث تلقائي
+        st.dataframe(styled_df, width=1400, height=500)
 
-        # ✅ إضافة خيار حذف منتج معين من الجدول
+        # ✅ إضافة خيار حذف منتج معين من الجدول باستخدام `id`
         st.write("### 🗑️ Delete a Product")
-        product_names = df_products["product_name"].tolist()
-        selected_product = st.selectbox("Select a product to delete", ["Select"] + product_names)
+        product_options = df_products.set_index("product_name")["id"].to_dict()  # ربط الاسم بـ `id`
 
-        if st.button("🗑️ Delete Product") and selected_product != "Select":
-            db.collection("products").document(selected_product).delete()
-            st.warning(f"⚠️ Product '{selected_product}' deleted successfully!")
+        selected_product_name = st.selectbox("Select a product to delete", ["Select"] + list(product_options.keys()))
+
+        if st.button("🗑️ Delete Product") and selected_product_name != "Select":
+            product_id = product_options[selected_product_name]
+            db.collection("products").document(product_id).delete()
+            st.warning(f"⚠️ Product '{selected_product_name}' deleted successfully!")
             st.rerun()
 
         # ✅ زر لحذف جميع المنتجات مع تأكيد قبل الحذف
