@@ -31,36 +31,15 @@ except Exception as e:
 conn = sqlite3.connect("govinto_products.db", check_same_thread=False)
 cursor = conn.cursor()
 
-def add_product():
-    """إضافة منتج جديد"""
-    st.subheader("Add New Product")
-    df_categories = pd.read_sql_query("SELECT * FROM categories", conn)
-    category_options = df_categories["category"].tolist()
-    selected_category = st.selectbox("Select Product Category", ["Select"] + category_options)
-    
-    subcategory_options = []
-    if selected_category != "Select":
-        category_id = df_categories[df_categories["category"] == selected_category]["id"].values[0]
-        df_subcategories = pd.read_sql_query("SELECT sub_category FROM subcategories WHERE category_id = ?", conn, params=(category_id,))
-        subcategory_options = df_subcategories["sub_category"].tolist()
-    
-    selected_subcategory = st.selectbox("Select Subcategory", ["Select"] + subcategory_options)
-    product_name = st.text_input("Product Name")
-    product_link = st.text_input("Product Link")
-    if st.button("Add Product") and selected_category != "Select" and selected_subcategory != "Select":
-        cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link) VALUES (?, ?, ?, ?)", (selected_category, selected_subcategory, product_name, product_link))
+def manage_categories():
+    """إدارة الفئات والفئات الفرعية"""
+    st.subheader("Manage Categories and Subcategories")
+    new_category = st.text_input("Add New Category")
+    if st.button("Add Category") and new_category:
+        cursor.execute("INSERT OR IGNORE INTO categories (category) VALUES (?)", (new_category,))
         conn.commit()
-        st.success("✅ Product added successfully!")
+        st.success("✅ Category added successfully!")
         st.rerun()
-
-def view_products():
-    """عرض المنتجات"""
-    st.subheader("View Products")
-    df_products = pd.read_sql_query("SELECT * FROM products", conn)
-    if not df_products.empty:
-        st.dataframe(df_products)
-    else:
-        st.info("لا توجد منتجات متاحة")
 
 def import_export_data():
     """استيراد وتصدير البيانات"""
@@ -69,25 +48,13 @@ def import_export_data():
         df_products = pd.read_sql_query("SELECT * FROM products", conn)
         df_products.to_csv("products_export.csv", index=False)
         st.success("✅ Data exported successfully!")
-
-def sync_data():
-    """مزامنة البيانات بين Firestore و SQLite"""
-    st.subheader("Sync Data")
-    if st.button("Sync from Firestore"):
-        products_ref = db.collection("products").stream()
-        cursor.execute("DELETE FROM products")
-        for doc in products_ref:
-            data = doc.to_dict()
-            cursor.execute("INSERT INTO products (category, sub_category, product_name, product_link) VALUES (?, ?, ?, ?)", (data["category"], data["sub_category"], data["product_name"], data["product_link"]))
-        conn.commit()
-        st.success("✅ Synced from Firestore!")
     
-    if st.button("Sync to Firestore"):
-        df_products = pd.read_sql_query("SELECT * FROM products", conn)
-        for _, row in df_products.iterrows():
-            doc_ref = db.collection("products").document(row["product_name"])
-            doc_ref.set(row.to_dict())
-        st.success("✅ Synced to Firestore!")
+    uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
+    if uploaded_file is not None:
+        df_uploaded = pd.read_csv(uploaded_file)
+        df_uploaded.to_sql("products", conn, if_exists="append", index=False)
+        st.success("✅ Data imported successfully!")
+        st.rerun()
 
 def main():
     st.sidebar.image("govinto_logo.png", use_container_width=True)
