@@ -1,6 +1,7 @@
 from datetime import datetime
 import streamlit as st
 import pandas as pd
+import plotly.graph_objects as go
 import firebase_admin
 from firebase_admin import credentials, firestore
 
@@ -64,8 +65,8 @@ def manage_categories():
 
 
 def view_products():
-    """عرض المنتجات من Firestore مع إمكانية حذف منتج معين أو حذف جميع المنتجات"""
-    st.subheader("View Products")
+    """عرض المنتجات من Firestore مع تصميم مريح للعين في الوضع الداكن"""
+    st.subheader("📦 View Products")
 
     # جلب جميع المنتجات من Firestore
     products_ref = db.collection("products").stream()
@@ -87,13 +88,27 @@ def view_products():
         # ✅ إعادة ترتيب الأعمدة
         df_products = df_products[column_order]
 
-        # ✅ عرض جميع الحقول في جدول متكامل
-        st.write("### Product List")
-        df_products.fillna("N/A", inplace=True)  # تجنب الأخطاء الناتجة عن القيم الفارغة
-        st.dataframe(df_products)
+        # ✅ تصميم الجدول باستخدام Plotly لجعله أكثر جاذبية في الوضع الداكن
+        fig = go.Figure(data=[go.Table(
+            columnwidth=[1.5, 1.5, 2, 3, 1, 1, 1, 1, 1, 1, 2],  # ضبط حجم الأعمدة
+            header=dict(
+                values=[f"<b>{col.replace('_', ' ').title()}</b>" for col in column_order],
+                fill_color="#333333",  # لون العنوان (رمادي غامق يناسب الوضع الداكن)
+                font=dict(color="white", size=14),  # لون النص في العناوين
+                align="left"
+            ),
+            cells=dict(
+                values=[df_products[col] for col in column_order],
+                fill=dict(color=["#1E1E1E"]),  # لون خلفية الخلايا (رمادي غامق يناسب Dark Mode)
+                font=dict(color="white", size=12),  # لون النص في الخلايا
+                align="left"
+            )
+        )])
+
+        st.plotly_chart(fig, use_container_width=True)  # عرض الجدول
 
         # ✅ إضافة خيار حذف منتج معين من الجدول
-        st.write("### Delete a Product")
+        st.write("### 🗑️ Delete a Product")
         product_names = df_products["product_name"].tolist()
         selected_product = st.selectbox("Select a product to delete", ["Select"] + product_names)
 
@@ -103,7 +118,7 @@ def view_products():
             st.rerun()
 
         # ✅ زر لحذف جميع المنتجات مع تأكيد قبل الحذف
-        st.write("### Delete All Products")
+        st.write("### ⚠ Delete All Products")
         if st.button("⚠ Delete ALL Products"):
             st.warning("⚠ Are you sure you want to delete ALL products? This action cannot be undone!")
             if st.button("✅ Confirm Delete All", key="confirm_delete_all"):
@@ -115,7 +130,6 @@ def view_products():
 
     else:
         st.info("❌ No products available.")
-
 
 
 
