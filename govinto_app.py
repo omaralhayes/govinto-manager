@@ -141,12 +141,11 @@ def main():
     st.sidebar.image("govinto_logo.png", use_container_width=True)
     st.sidebar.title("Menu")
     menu = ["Add Product", "Manage Categories", "View Products", "Import/Export Data", "Sync Data"]
-    if choice == "Add Product":
-    add_product()
     choice = st.sidebar.radio("Select an option", menu)
 
-
-  
+    
+    if choice == "Add Product":
+    add_product()
     if choice == "Manage Categories":
         manage_categories()
     elif choice == "View Products":
