@@ -155,8 +155,6 @@ for doc in products_ref:
         data.get("store_price", 0.0), data.get("updated_at", "2000-01-01 00:00:00")
     ))
 
-))
-
         conn.commit()
         st.success("✅ Synced from Firestore!")
 
