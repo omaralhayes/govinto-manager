@@ -132,20 +132,6 @@ def import_export_data():
 
 
 
-def sync_data():
-    """مزامنة البيانات بين Firestore فقط"""
-    st.subheader("🔄 Sync Data")
-
-    if st.button("⬇ Sync from Firestore"):
-        products_ref = db.collection("products").stream()
-        products = [doc.to_dict() for doc in products_ref]
-        st.write("📥 Firestore Data:", products)
-        st.success("✅ Data loaded from Firestore successfully!")
-
-    if st.button("⬆ Sync to Firestore"):
-        st.success("⚠️ Syncing is now automatic in Firestore and no longer requires manual syncing!")
-
-
 def add_product():
     """إضافة منتج جديد مباشرة إلى Firestore"""
     st.subheader("Add New Product")
