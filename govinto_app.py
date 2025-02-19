@@ -161,8 +161,13 @@ def sync_data():
 columns = [column[1] for column in cursor.fetchall()]
 
 if "updated_at" not in columns:
-    cursor.execute("ALTER TABLE products ADD COLUMN updated_at TEXT DEFAULT '2000-01-01 00:00:00'")
-    conn.commit()
+    try:
+        cursor.execute("ALTER TABLE products ADD COLUMN updated_at TEXT DEFAULT '2000-01-01 00:00:00'")
+        conn.commit()
+        st.success("✅ Column 'updated_at' added successfully!")
+    except sqlite3.OperationalError:
+        st.warning("⚠️ Column 'updated_at' already exists. Skipping modification.")
+
 
 cursor.execute("SELECT updated_at FROM products WHERE product_name = ?", (product_name,))
 row = cursor.fetchone()
