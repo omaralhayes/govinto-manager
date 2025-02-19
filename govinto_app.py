@@ -132,20 +132,17 @@ def sync_data():
     """مزامنة البيانات بين Firestore و SQLite بطريقة أكثر استقرارًا"""
     st.subheader("🔄 Sync Data")
 
-    # ✅ 1️⃣ التحقق من بنية الجدول في SQLite
+    # ✅ 1️⃣ التحقق من وجود الأعمدة المطلوبة في SQLite
     cursor.execute("PRAGMA table_info(products)")
     columns_info = cursor.fetchall()
     column_names = [column[1] for column in columns_info]
     st.write("🔍 SQLite Table Structure:", column_names)
 
-    required_columns = {"category", "sub_category", "product_name", "product_link",
-                        "likes", "comments", "rating", "supplier_orders", 
-                        "supplier_price", "store_price", "updated_at"}
-
-    missing_columns = required_columns - set(column_names)
-    if missing_columns:
-        st.error(f"❌ الأعمدة التالية مفقودة في SQLite: {missing_columns}")
-        return
+    # ✅ إضافة عمود `updated_at` إذا كان مفقودًا
+    if "updated_at" not in column_names:
+        cursor.execute("ALTER TABLE products ADD COLUMN updated_at TEXT DEFAULT '2000-01-01 00:00:00'")
+        conn.commit()
+        st.warning("⚠️ Column 'updated_at' was missing and has been added automatically!")
 
     # ✅ 2️⃣ مزامنة البيانات من Firestore إلى SQLite
     if st.button("⬇ Sync from Firestore"):
@@ -155,7 +152,7 @@ def sync_data():
             product_name = data["product_name"]
             updated_at_firestore = data.get("updated_at", "2000-01-01 00:00:00")
 
-            # التحقق مما إذا كان المنتج موجودًا بالفعل في SQLite
+            # 🔍 التحقق مما إذا كان المنتج موجودًا بالفعل في SQLite
             cursor.execute("SELECT updated_at FROM products WHERE product_name = ?", (product_name,))
             row = cursor.fetchone()
             updated_at_sqlite = row[0] if row else "2000-01-01 00:00:00"
@@ -196,9 +193,6 @@ def sync_data():
             })
         batch.commit()
         st.success("✅ Synced to Firestore successfully!")
-  # ✅ الآن في المكان الصحيح خارج الحلقة `for`
-  # ✅ الآن في المكان الصحيح خارج الحلقة `for`
-  # ✅ خارج الحلقة بعد الانتهاء من جميع العمليات
 
 
 def add_product():
