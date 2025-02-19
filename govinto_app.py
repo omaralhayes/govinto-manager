@@ -168,9 +168,13 @@ if "updated_at" not in columns:
     except sqlite3.OperationalError:
         st.warning("⚠️ Column 'updated_at' already exists. Skipping modification.")
 
+for doc in products_ref:
+    data = doc.to_dict()
+    product_name = data["product_name"]  # ✅ التأكد من أن `product_name` معرف
+    
+    cursor.execute("SELECT updated_at FROM products WHERE product_name = ?", (product_name,))
+    row = cursor.fetchone()
 
-cursor.execute("SELECT updated_at FROM products WHERE product_name = ?", (product_name,))
-row = cursor.fetchone()
 
 if row:
     updated_at_sqlite = datetime.strptime(row[0], "%Y-%m-%d %H:%M:%S")
