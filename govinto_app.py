@@ -63,6 +63,35 @@ def add_product():
         st.success("✅ Product added successfully!")
         st.rerun()
 
+def manage_categories():
+    """ إدارة الفئات والفئات الفرعية """
+    st.subheader("Manage Categories and Subcategories")
+    new_category = st.text_input("Add New Category")
+    if st.button("Add Category") and new_category:
+        cursor.execute("INSERT OR IGNORE INTO categories (category) VALUES (?)", (new_category,))
+        conn.commit()
+        st.success("✅ Category added successfully!")
+        st.rerun()
+    
+    categories = pd.read_sql_query("SELECT * FROM categories", conn)
+    selected_category = st.selectbox("Select Category", ["Select"] + categories["category"].tolist())
+    
+    if selected_category != "Select":
+        category_id = categories[categories["category"] == selected_category]["id"].values[0]
+        
+        if st.button("Delete Category"):
+            cursor.execute("DELETE FROM categories WHERE id = ?", (category_id,))
+            conn.commit()
+            st.warning("⚠️ Category and its subcategories deleted!")
+            st.rerun()
+        
+        new_subcategory = st.text_input("Add Subcategory")
+        if st.button("Add Subcategory") and new_subcategory:
+            cursor.execute("INSERT OR IGNORE INTO subcategories (category_id, sub_category) VALUES (?, ?)", (category_id, new_subcategory))
+            conn.commit()
+            st.success("✅ Subcategory added successfully!")
+            st.rerun()
+
 def main():
     st.sidebar.image("govinto_logo.png", use_container_width=True)
     st.sidebar.title("Menu")
