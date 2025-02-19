@@ -234,22 +234,43 @@ def add_product():
 
 
 def main():
-    st.sidebar.image("govinto_logo.png", use_container_width=True)
-    st.sidebar.title("Menu")
-    menu = ["Add Product", "Manage Categories", "View Products", "Import/Export Data"]
-    choice = st.sidebar.radio("Select an option", menu)
+    """واجهة التطبيق الرئيسية مع تحسين تجربة المستخدم وإضافة زر 'Add to Home Screen'."""
+    
+    # ✅ شعار المتجر في القائمة الجانبية
+    st.sidebar.image("govinto_logo.png", use_column_width=True)
+    
+    # ✅ قائمة التنقل الجانبية
+    st.sidebar.title("📌 Menu")
+    menu = ["🏠 Home", "➕ Add Product", "📂 Manage Categories", "📦 View Products", "📤 Import/Export Data"]
+    choice = st.sidebar.radio("📍 Select an option", menu)
 
-    if choice == "Add Product":
+    # ✅ إضافة زر "Add to Home Screen" في القائمة الجانبية
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("📲 Install App")
+    if st.sidebar.button("Add to Home Screen"):
+        st.sidebar.info("""
+        **How to install this app on your phone:**
+        
+        1️⃣ Open this app in **Chrome (Android)** or **Safari (iPhone).**  
+        2️⃣ Tap on **'Share'** (iPhone) or **'⋮ Menu'** (Android).  
+        3️⃣ Select **'Add to Home Screen'.**  
+        4️⃣ Tap **'Add'**, and now you can access this app like a native app! 🚀
+        """)
+
+    # ✅ تشغيل الصفحة المختارة من القائمة الجانبية
+    if choice == "🏠 Home":
+        st.title("🏠 Welcome to Govinto Manager!")
+        st.write("Use the sidebar to navigate through different sections.")
+    elif choice == "➕ Add Product":
         add_product()
-    elif choice == "Manage Categories":
+    elif choice == "📂 Manage Categories":
         manage_categories()
-    elif choice == "View Products":
+    elif choice == "📦 View Products":
         view_products()
-    elif choice == "Import/Export Data":
+    elif choice == "📤 Import/Export Data":
         import_export_data()
-    elif choice == "Sync Data":
-        sync_data()
 
-
+# ✅ تشغيل التطبيق
 if __name__ == "__main__":
     main()
+
