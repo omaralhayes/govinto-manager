@@ -65,7 +65,7 @@ def manage_categories():
 
 
 def view_products():
-    """عرض المنتجات من Firestore مع تصميم واسع، تمرير أفقي، وألوان مريحة للوضع الداكن"""
+    """عرض المنتجات من Firestore بنفس تنسيق الجدول المرفق باستخدام Plotly"""
     st.subheader("📦 View Products")
 
     # جلب جميع المنتجات من Firestore
@@ -75,7 +75,7 @@ def view_products():
     if products:
         df_products = pd.DataFrame(products)
 
-        # ✅ ترتيب الأعمدة حسب الترتيب المطلوب
+        # ✅ ترتيب الأعمدة ليطابق الجدول المرفق
         column_order = ["category", "sub_category", "product_name", "product_link",
                         "rating", "supplier_orders", "likes", "comments",
                         "supplier_price", "store_price", "updated_at"]
@@ -88,46 +88,25 @@ def view_products():
         # ✅ إعادة ترتيب الأعمدة
         df_products = df_products[column_order]
 
-        # ✅ تحسين تصميم الجدول باستخدام Plotly مع إمكانية التمرير الأفقي
+        # ✅ تحسين تصميم الجدول ليطابق الجدول المرفق
         fig = go.Figure(data=[go.Table(
-            columnwidth=[3, 3, 4, 5, 2, 2, 2, 2, 2, 2, 3],  # ضبط حجم الأعمدة ليكون أوسع
+            columnwidth=[3, 3, 3, 4, 1.5, 2, 1.5, 1.5, 2, 2, 3],  # ضبط حجم الأعمدة ليكون مطابقًا للجدول
             header=dict(
                 values=[f"<b>{col.replace('_', ' ').title()}</b>" for col in column_order],
-                fill_color="#1E1E1E",  # لون العنوان (رمادي داكن يناسب Dark Mode)
-                font=dict(color="white", size=18),  # تكبير النصوص في العناوين
-                align="left"
+                fill_color="#6C7A89",  # لون العنوان (مطابق للجدول المرفق)
+                font=dict(color="white", size=16),  # تكبير النصوص في العناوين
+                align="center"
             ),
             cells=dict(
                 values=[df_products[col] for col in column_order],
-                fill=dict(color=[["#2E2E2E"] * len(df_products)]),  # لون الخلفية رمادي أفتح قليلاً لمزيد من التباين
-                font=dict(color="white", size=16),  # تكبير النصوص في الخلايا
-                align="left"
+                fill=dict(color=[["#F3F6FB"] * len(df_products)]),  # لون الخلفية مطابق للجدول المرفق
+                font=dict(color="black", size=14),  # تكبير النصوص في الخلايا
+                align="center"
             )
         )])
 
-        # ✅ تكبير الجدول ليكون أكثر وضوحًا، مع إضافة تمرير أفقي عند الحاجة
-        st.plotly_chart(fig, use_container_width=True, height=900)  
-
-        # ✅ إضافة خيار حذف منتج معين من الجدول
-        st.write("### 🗑️ Delete a Product")
-        product_names = df_products["product_name"].tolist()
-        selected_product = st.selectbox("Select a product to delete", ["Select"] + product_names)
-
-        if st.button("🗑️ Delete Product") and selected_product != "Select":
-            db.collection("products").document(selected_product).delete()
-            st.warning(f"⚠️ Product '{selected_product}' deleted successfully!")
-            st.rerun()
-
-        # ✅ زر لحذف جميع المنتجات مع تأكيد قبل الحذف
-        st.write("### ⚠ Delete All Products")
-        if st.button("⚠ Delete ALL Products"):
-            st.warning("⚠ Are you sure you want to delete ALL products? This action cannot be undone!")
-            if st.button("✅ Confirm Delete All", key="confirm_delete_all"):
-                docs = db.collection("products").stream()
-                for doc in docs:
-                    doc.reference.delete()
-                st.error("⚠ All products have been deleted!")
-                st.rerun()
+        # ✅ تكبير الجدول ليطابق الجدول المرفق، مع تمرير أفقي عند الحاجة
+        st.plotly_chart(fig, use_container_width=True, height=700)
 
     else:
         st.info("❌ No products available.")
