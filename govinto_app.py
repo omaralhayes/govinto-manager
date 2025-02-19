@@ -162,8 +162,9 @@ def sync_data():
         
         conn.commit()
         st.success("✅ Synced from Firestore!")
-
-    # ✅ إضافة زر "Sync to Firestore" لمزامنة البيانات من SQLite إلى Firestore
+    
+    
+        # ✅ إضافة زر "Sync to Firestore" لمزامنة البيانات من SQLite إلى Firestore
     if st.button("Sync to Firestore"):
         df_products = pd.read_sql_query("SELECT * FROM products", conn)
         for _, row in df_products.iterrows():
@@ -181,10 +182,10 @@ def sync_data():
                 "store_price": row["store_price"],
                 "updated_at": row["updated_at"]
             })
-        
-        st.success("✅ Synced to Firestore!")  # ✅ الآن في المكان الصحيح خارج الحلقة `for`
-      # ✅ الآن في المكان الصحيح خارج الحلقة `for`
-      # ✅ خارج الحلقة بعد الانتهاء من جميع العمليات
+    
+    st.success("✅ Synced to Firestore!")  # ✅ الآن في المكان الصحيح خارج الحلقة `for`
+  # ✅ الآن في المكان الصحيح خارج الحلقة `for`
+  # ✅ خارج الحلقة بعد الانتهاء من جميع العمليات
 
 
 def add_product():
