@@ -1,5 +1,4 @@
 
-
 import streamlit as st
 import pandas as pd
 import firebase_admin
@@ -76,31 +75,16 @@ def view_products():
 
         # ✅ عرض المنتجات كجدول مع زر حذف بجانب كل منتج
         st.write("### Product List")
-        # ✅ عرض جميع الحقول في جدول متكامل
-st.write("### Product List")
-df_products.fillna("N/A", inplace=True)  # تجنب الأخطاء الناتجة عن القيم الفارغة
-st.dataframe(df_products)
+        for index, row in df_products.iterrows():
+            col1, col2, col3 = st.columns([3, 2, 1])
 
-# ✅ إضافة خيار حذف منتج معين من الجدول
-st.write("### Delete a Product")
-product_names = [doc.id for doc in db.collection("products").stream()]
-selected_product = st.selectbox("Select a product to delete", ["Select"] + product_names)
+            col1.text(f"📦 {row['product_name']}")
+            col2.text(f"💰 {row['store_price']} USD")
 
-if st.button("🗑️ Delete Product") and selected_product != "Select":
-    db.collection("products").document(selected_product).delete()
-    st.warning(f"⚠️ Product '{selected_product}' deleted successfully!")
-    st.rerun()
-
-# ✅ زر لحذف جميع المنتجات مع تأكيد قبل الحذف
-st.write("### Delete All Products")
-if st.button("⚠ Delete ALL Products"):
-    st.warning("⚠ Are you sure you want to delete ALL products? This action cannot be undone!")
-    if st.button("✅ Confirm Delete All", key="confirm_delete_all"):
-        docs = db.collection("products").stream()
-        for doc in docs:
-            doc.reference.delete()
-        st.error("⚠ All products have been deleted!")
-        st.rerun()
+            if col3.button("🗑️ Delete", key=f"delete_{row['product_name']}"):
+                db.collection("products").document(row["product_name"]).delete()
+                st.warning(f"⚠️ Product '{row['product_name']}' deleted successfully!")
+                st.rerun()
 
         # ✅ زر لحذف جميع المنتجات مع تأكيد قبل الحذف
         st.write("### Delete All Products")
