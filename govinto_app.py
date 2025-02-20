@@ -400,10 +400,11 @@ def main():
 
     # ✅ التحقق مما إذا كان المستخدم قد سجل الدخول
     if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
+        st.sidebar.image("govinto_logo.png", use_container_width=True)  # ✅ إضافة الشعار في شاشة تسجيل الدخول
         st.warning("🔐 Please log in to access the application.")
         return  # ⛔️ يمنع الوصول للتطبيق إذا لم يتم تسجيل الدخول
 
-    # ✅ شعار المتجر في القائمة الجانبية
+    # ✅ شعار المتجر في القائمة الجانبية بعد تسجيل الدخول
     st.sidebar.image("govinto_logo.png", use_container_width=True)
 
     # ✅ قائمة التنقل الجانبية بناءً على دور المستخدم
@@ -412,7 +413,7 @@ def main():
     if st.session_state["role"] in ["developer", "user"]:
         menu = ["🏠 Home", "➕ Add Product", "📦 View Products", "📤 Import/Export Data"]
         if st.session_state["role"] == "developer":
-            menu.insert(2, "📂 Manage Categories")  # إضافة خيار الفئات للمطور فقط
+            menu.insert(2, "📂 Manage Categories")  # ✅ إضافة خيار "Manage Categories" للمطور فقط
 
     choice = st.sidebar.radio("📍 Select an option", menu)
 
