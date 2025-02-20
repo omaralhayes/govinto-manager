@@ -417,6 +417,11 @@ def main():
         menu_options.insert(2, "📂 Manage Categories")  
 
     choice = st.sidebar.radio("📍 Select an option", menu_options)
+    
+    if "menu" in st.session_state and choice != st.session_state["menu"]:
+        st.session_state["menu"] = choice
+        st.rerun()
+
 
     # ✅ تحديث القائمة بناءً على session_state
     if choice != st.session_state.get("menu"):
