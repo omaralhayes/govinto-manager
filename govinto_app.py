@@ -274,25 +274,24 @@ def home():
 
     st.markdown("---")
 
-   # ✅ أزرار الاختصار في أسفل الصفحة
-st.markdown("---")
-st.subheader("🚀 Quick Access")
-col1, col2, col3 = st.columns(3)
+    # ✅ أزرار الاختصار في أسفل الصفحة
+    st.markdown("### 🚀 Quick Access")
+    col1, col2, col3 = st.columns(3)
 
-with col1:
-    if st.button("➕ Add New Product"):
-        st.session_state["menu"] = "➕ Add Product"
-        st.rerun()
+    with col1:
+        if st.button("➕ Add New Product"):
+            st.session_state["menu"] = "➕ Add Product"
+            st.rerun()
 
-with col2:
-    if st.button("📤 Import/Export Data"):
-        st.session_state["menu"] = "📤 Import/Export Data"
-        st.rerun()
+    with col2:
+        if st.button("📤 Import/Export Data"):
+            st.session_state["menu"] = "📤 Import/Export Data"
+            st.rerun()
 
-with col3:
-    if st.button("📦 View Products"):
-        st.session_state["menu"] = "📦 View Products"
-        st.rerun()
+    with col3:
+        if st.button("📦 View Products"):
+            st.session_state["menu"] = "📦 View Products"
+            st.rerun()
 
       
 
