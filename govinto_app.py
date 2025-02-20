@@ -403,6 +403,13 @@ def main():
         if st.session_state["role"] == "developer":
             menu.insert(2, "📂 Manage Categories")  # ✅ إضافة خيار "Manage Categories" للمطور فقط
 
+    # ✅ إعادة توجيه المستخدم إذا تم الضغط على زر في Quick Access
+    if "redirect" in st.session_state:
+        choice = st.session_state["redirect"]
+        del st.session_state["redirect"]  # 🔄 مسح حالة إعادة التوجيه بعد التنقل
+    else:
+        choice = st.sidebar.radio("📍 Select an option", menu)
+  
     choice = st.sidebar.radio("📍 Select an option", menu)
 
     # ✅ إضافة زر "Install App" في القائمة الجانبية
