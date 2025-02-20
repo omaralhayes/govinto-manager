@@ -315,12 +315,6 @@ def add_product():
 
 def home():
     """ الصفحة الرئيسية - لوحة معلومات تفاعلية """
-
-    # ✅ الحماية: منع الوصول للمستخدمين غير المسجلين
-    if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
-        st.warning("🔐 Please log in to access this page.")
-        st.stop()  # ⛔️ يمنع تشغيل الصفحة إذا لم يكن المستخدم مسجلاً للدخول
-
     st.title("🏠 Welcome to Govinto Manager!")
     st.write("📊 Below is a quick overview of your store's performance.")
 
@@ -360,6 +354,22 @@ def home():
         st.info("No products available yet!")
 
     st.markdown("---")
+
+    # ✅ أزرار الاختصار
+    st.subheader("🚀 Quick Access")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        if st.button("➕ Add New Product"):
+            st.session_state["menu"] = "➕ Add Product"
+            st.rerun()
+    with col2:
+        if st.button("📂 Manage Categories"):
+            st.session_state["menu"] = "📂 Manage Categories"
+            st.rerun()
+    with col3:
+        if st.button("📦 View Products"):
+            st.session_state["menu"] = "📦 View Products"
+            st.rerun()
 
 
       
