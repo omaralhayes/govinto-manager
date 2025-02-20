@@ -409,10 +409,11 @@ def main():
     # ✅ قائمة التنقل الجانبية بناءً على دور المستخدم
     st.sidebar.title("📌 Menu")
 
+    if st.session_state["role"] in ["developer", "user"]:
+    menu = ["🏠 Home", "➕ Add Product", "📦 View Products", "📤 Import/Export Data"]
     if st.session_state["role"] == "developer":
-        menu = ["🏠 Home", "➕ Add Product", "📂 Manage Categories", "📦 View Products", "📤 Import/Export Data"]
-    else:  # 🟢 المستخدم العادي يمكنه فقط الوصول إلى هذه الصفحات
-        menu = ["➕ Add Product", "📦 View Products", "📤 Import/Export Data"]
+        menu.insert(2, "📂 Manage Categories")  # إضافة خيار الفئات للمطور فقط
+
 
     choice = st.sidebar.radio("📍 Select an option", menu)
 
