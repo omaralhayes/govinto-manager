@@ -415,6 +415,7 @@ def main():
         menu.insert(2, "📂 Manage Categories")  # إضافة خيار الفئات للمطور فقط
 
 
+
     choice = st.sidebar.radio("📍 Select an option", menu)
 
     # ✅ إضافة زر "Install App" في القائمة الجانبية
