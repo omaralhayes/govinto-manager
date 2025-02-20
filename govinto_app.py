@@ -318,12 +318,19 @@ def add_product():
 
 
 def home():
-  
-    login()
-    return  # ⛔ منع تحميل باقي الصفحة إذا لم يتم تسجيل الدخول
+    """ الصفحة الرئيسية - لوحة معلومات تفاعلية """
+    
+    # ✅ عرض الشعار دائمًا في الصفحة الرئيسية
+    st.image("govinto_logo.png", use_container_width=True)
+
+    # ✅ التحقق من تسجيل الدخول، إذا لم يكن المستخدم مسجلًا، عرض نموذج تسجيل الدخول
+    if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
+        login()
+        return  # ⛔ منع تحميل باقي الصفحة إذا لم يتم تسجيل الدخول
 
     st.title("🏠 Welcome to Govinto Manager!")
     st.write("📊 Below is a quick overview of your store's performance.")
+
 
     # ✅ جلب بيانات المنتجات والفئات من Firestore
     products_ref = db.collection("products").stream()
