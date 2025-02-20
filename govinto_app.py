@@ -454,18 +454,22 @@ def main():
         4️⃣ Tap **'Add'**, and now you can access this app like a native app! 🚀
         """)
 
-    # ✅ تشغيل الصفحة المختارة من القائمة الجانبية
-    if choice == "🏠 Home":
-        home()
-    elif choice == "➕ Add Product":
-        add_product()
-    elif choice == "📂 Manage Categories":
-        manage_categories()
-    elif choice == "📦 View Products":
-        view_products()
-    elif choice == "📤 Import/Export Data":
-        import_export_data()
+    # ✅ الحصول على الباراميترات من الـ URL لتحديد الصفحة
+    query_params = st.query_params  # 🔄 الحصول على الباراميترات من الرابط
+    page = query_params.get("page", "home")
 
+    # ✅ توجيه المستخدم إلى الصفحة المناسبة بناءً على الرابط
+    if page == "home":
+        home()
+    elif page == "add_product":
+        add_product()
+    elif page == "view_products":
+        view_products()
+    elif page == "import_export":
+        import_export_data()
+    elif st.session_state["role"] == "developer" and page == "manage_categories":
+        manage_categories()
+    
     # ✅ تحديث `menu` في `session_state`
     st.session_state["menu"] = choice
 
