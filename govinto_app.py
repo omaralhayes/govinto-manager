@@ -75,11 +75,6 @@ def login():
         st.sidebar.image("govinto_logo.png", use_container_width=True)
         st.sidebar.subheader(f"✅ Logged in as: {st.session_state['username']}")
         
-        if st.sidebar.button("🚪 Logout"):
-            st.session_state.clear()
-            st.rerun()
-
-  
 
 
 
@@ -124,6 +119,11 @@ def manage_categories():
             db.collection("categories").document(selected_category).delete()
             st.warning(f"⚠️ Category '{selected_category}' and its subcategories deleted!")
             st.rerun()
+
+    # ✅ عرض القائمة الأفقية في أسفل الصفحة
+    st.markdown("---")
+    horizontal_menu()
+          
 
 
 
@@ -194,10 +194,11 @@ def view_products():
     else:
         st.info("❌ No products available.")
 
-
-
-
-
+    # ✅ عرض القائمة الأفقية في أسفل الصفحة
+    st.markdown("---")
+    horizontal_menu()
+     
+      
 
 def import_export_data():
     """استيراد وتصدير البيانات إلى Firestore"""
@@ -270,6 +271,12 @@ def import_export_data():
             st.success("✅ Data imported successfully!")
             st.rerun()
 
+          
+    # ✅ عرض القائمة الأفقية في أسفل الصفحة
+    st.markdown("---")
+    horizontal_menu()
+
+
 
 
 def add_product():
@@ -310,6 +317,10 @@ def add_product():
         })
         st.success("✅ Product added successfully!")
         st.rerun()
+      
+        # ✅ عرض القائمة الأفقية في أسفل الصفحة
+        st.markdown("---")
+        horizontal_menu()
 
 
 
@@ -361,8 +372,37 @@ def home():
 
     st.markdown("---")
 
+      # ✅ عرض القائمة الأفقية في أسفل الصفحة
+    st.markdown("---")
+    horizontal_menu()
+
+
 
       
+def horizontal_menu():
+    """قائمة أفقية للتنقل بين الصفحات"""
+    menu_options = ["🏠 Home", "➕ Add Product", "📦 View Products", "📤 Import/Export Data"]
+    
+    if st.session_state["role"] == "developer":
+        menu_options.insert(2, "📂 Manage Categories")  # إضافة الفئات فقط للمطور
+
+    # ✅ عرض القائمة الأفقية باستخدام `st.radio()`
+    selected_page = st.radio("", menu_options, horizontal=True, key="bottom_menu")
+
+    # ✅ تحديث `menu` في `session_state`
+    st.session_state["menu"] = selected_page
+
+    # ✅ تشغيل الصفحة المختارة
+    if selected_page == "🏠 Home":
+        home()
+    elif selected_page == "➕ Add Product":
+        add_product()
+    elif selected_page == "📂 Manage Categories":
+        manage_categories()
+    elif selected_page == "📦 View Products":
+        view_products()
+    elif selected_page == "📤 Import/Export Data":
+        import_export_data()
 
 
 
