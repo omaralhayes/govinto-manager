@@ -31,42 +31,50 @@ except Exception as e:
 # ✅ هنا يجب إضافة الدالة
 def get_user_from_firestore(username):
     """جلب بيانات المستخدم من Firestore"""
-    user_ref = db.collection("users").document(username).get()
-    if user_ref.exists:
-        return user_ref.to_dict()
-    return None
+    try:
+        user_ref = db.collection("users").document(username).get()
+        if user_ref.exists:
+            user_data = user_ref.to_dict()
+            return user_data  # إرجاع البيانات كما هي بدون تعديل
+        else:
+            return None  # المستخدم غير موجود
+    except Exception as e:
+        st.error(f"❌ Error fetching user data: {e}")
+        return None
+
 
 def login():
-    """نظام تسجيل الدخول والتحكم في صلاحيات المستخدمين"""
+    """نظام تسجيل الدخول وتحسين معالجة الأخطاء"""
 
     st.sidebar.subheader("🔐 Login")
 
     # ✅ إدخال اسم المستخدم وكلمة المرور
     username = st.sidebar.text_input("👤 Username", key="username")
-    password = st.sidebar.text_input("🔑 Password", type="password", key="password")
+    password = st.sidebar.text_input("🔑 Password", type="password", key="password_input")
 
     login_button = st.sidebar.button("🔓 Login")
 
     # ✅ عند الضغط على زر تسجيل الدخول
     if login_button:
-        user_data = get_user_from_firestore(username)
+        user_data = get_user_from_firestore(username.strip())  # إزالة المسافات الزائدة
         
         if user_data:
-            if user_data["password"] == password:
+            if user_data.get("password") == password:
                 st.session_state["authenticated"] = True
-                st.session_state["role"] = user_data["role"]
+                st.session_state["role"] = user_data.get("role", "user")  # الافتراضي "user" لو لم يُحدد
                 st.session_state["username"] = username
                 st.success(f"✅ Welcome, {username}!")
-                st.rerun()
+                st.experimental_rerun()
             else:
-                st.error("❌ Incorrect password!")
+                st.error("❌ Incorrect password! Please try again.")
         else:
-            st.error("❌ Username not found!")
+            st.error("❌ Username not found! Please check your credentials.")
 
     # ✅ تسجيل الخروج
     if "authenticated" in st.session_state and st.sidebar.button("🚪 Logout"):
         st.session_state.clear()
-        st.rerun()
+        st.experimental_rerun()
+
   
 
 
