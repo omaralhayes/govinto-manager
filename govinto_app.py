@@ -1,3 +1,4 @@
+
 from datetime import datetime
 import streamlit as st
 import pandas as pd
@@ -41,44 +42,6 @@ def get_user_from_firestore(username):
     except Exception as e:
         st.error(f"❌ Error fetching user data: {e}")
         return None
-
-
-def horizontal_menu():
-    """قائمة أفقية للتنقل بين الصفحات للمستخدم العادي"""
-    st.markdown(
-        """
-        <style>
-            .horizontal-menu {
-                display: flex;
-                justify-content: center;
-                gap: 15px;
-                background-color: #222;
-                padding: 10px;
-                border-radius: 10px;
-            }
-            .horizontal-menu button {
-                background-color: #444;
-                color: white;
-                padding: 8px 15px;
-                border: none;
-                border-radius: 5px;
-                cursor: pointer;
-                font-size: 14px;
-            }
-            .horizontal-menu button:hover {
-                background-color: #555;
-            }
-        </style>
-        <div class="horizontal-menu">
-            <button onclick="window.location.href='?page=home'">🏠 Home</button>
-            <button onclick="window.location.href='?page=add_product'">➕ Add Product</button>
-            <button onclick="window.location.href='?page=view_products'">📦 View Products</button>
-            <button onclick="window.location.href='?page=import_export'">📤 Import/Export</button>
-        </div>
-        <br>
-        """,
-        unsafe_allow_html=True
-    )
 
 
 def login():
@@ -128,9 +91,6 @@ def manage_categories():
         st.warning("🔐 Please log in to access this page.")
         st.stop()  # ⛔️ يمنع تشغيل الصفحة إذا لم يكن المستخدم مسجلاً للدخول
 
-    horizontal_menu()  # ✅ إظهار القائمة العلوية في كل صفحة
-
-
     if st.session_state["role"] != "developer":
         st.warning("❌ You do not have permission to access this page.")
         st.stop()  # ⛔️ يمنع تشغيل الصفحة إذا لم يكن المستخدم "developer"
@@ -175,9 +135,6 @@ def view_products():
     if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
         st.warning("🔐 Please log in to access this page.")
         st.stop()  # ⛔️ يمنع تشغيل الصفحة إذا لم يكن المستخدم مسجلاً للدخول
-
-    horizontal_menu()  # ✅ إظهار القائمة العلوية في كل صفحة
-
 
     st.subheader("📦 View Products")
 
@@ -249,9 +206,6 @@ def import_export_data():
     if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
         st.warning("🔐 Please log in to access this page.")
         st.stop()  # ⛔️ يمنع تشغيل الصفحة إذا لم يكن المستخدم مسجلاً للدخول
-
-    horizontal_menu()  # ✅ إظهار القائمة العلوية في كل صفحة
-
 
     st.subheader("📤 Import/Export Data")
 
@@ -326,9 +280,6 @@ def add_product():
         st.warning("🔐 Please log in to access this page.")
         st.stop()  # ⛔️ يمنع تشغيل الصفحة إذا لم يكن المستخدم مسجلاً للدخول
 
-    horizontal_menu()  # ✅ إظهار القائمة العلوية في كل صفحة
-
-
     st.subheader("Add New Product")
 
     categories = [doc.id for doc in db.collection("categories").stream()]
@@ -369,11 +320,6 @@ def home():
     if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
         st.warning("🔐 Please log in to access this page.")
         st.stop()  # ⛔️ يمنع تشغيل الصفحة إذا لم يكن المستخدم مسجلاً للدخول
-
-    horizontal_menu()  # ✅ إظهار القائمة العلوية في كل صفحة
-
-
-      
 
     st.title("🏠 Welcome to Govinto Manager!")
     st.write("📊 Below is a quick overview of your store's performance.")
@@ -454,22 +400,18 @@ def main():
         4️⃣ Tap **'Add'**, and now you can access this app like a native app! 🚀
         """)
 
-    # ✅ الحصول على الباراميترات من الـ URL لتحديد الصفحة
-    query_params = st.query_params  # 🔄 الحصول على الباراميترات من الرابط
-    page = query_params.get("page", "home")
-
-    # ✅ توجيه المستخدم إلى الصفحة المناسبة بناءً على الرابط
-    if page == "home":
+    # ✅ تشغيل الصفحة المختارة من القائمة الجانبية
+    if choice == "🏠 Home":
         home()
-    elif page == "add_product":
+    elif choice == "➕ Add Product":
         add_product()
-    elif page == "view_products":
-        view_products()
-    elif page == "import_export":
-        import_export_data()
-    elif st.session_state["role"] == "developer" and page == "manage_categories":
+    elif choice == "📂 Manage Categories":
         manage_categories()
-    
+    elif choice == "📦 View Products":
+        view_products()
+    elif choice == "📤 Import/Export Data":
+        import_export_data()
+
     # ✅ تحديث `menu` في `session_state`
     st.session_state["menu"] = choice
 
