@@ -373,9 +373,11 @@ def home():
     
     with col1:
         if st.button("➕ Add New Product"):
-            if st.session_state["menu"] != "➕ Add Product":
-                st.session_state["menu"] = "➕ Add Product"
-                st.rerun()
+    if st.session_state["menu"] != "➕ Add Product":
+        st.session_state["menu"] = "➕ Add Product"
+        st.write("🔄 Reloading...")  # مراقبة التغيير
+        st.rerun()
+
     
     with col2:
         if st.button("📂 Manage Categories") and st.session_state["role"] == "developer":
