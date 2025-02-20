@@ -313,6 +313,19 @@ def main():
 
     choice = st.sidebar.radio("📍 Select an option", menu, index=menu.index(st.session_state["menu"]))
 
+    # ✅ إضافة زر "Install App" في القائمة الجانبية
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("📲 Install App")
+    if st.sidebar.button("Add to Home Screen"):
+        st.sidebar.info("""
+        **📲 How to install this app on your phone:**
+        
+        1️⃣ Open this app in **Chrome (Android)** or **Safari (iPhone).**  
+        2️⃣ Tap on **'Share'** (iPhone) or **'⋮ Menu'** (Android).  
+        3️⃣ Select **'Add to Home Screen'.**  
+        4️⃣ Tap **'Add'**, and now you can access this app like a native app! 🚀
+        """)
+
     # ✅ تشغيل الصفحة المختارة من القائمة الجانبية
     if choice == "🏠 Home":
         home()
