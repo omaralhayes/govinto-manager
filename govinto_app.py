@@ -435,13 +435,18 @@ def main():
     if st.session_state["menu"] == "🏠 Home":
         home()
     elif st.session_state["menu"] == "➕ Add Product":
+        st.write("✅ Navigating to ➕ Add Product")  # تتبع الحركة
         add_product()
     elif st.session_state["menu"] == "📂 Manage Categories":
+        st.write("✅ Navigating to 📂 Manage Categories")
         manage_categories()
     elif st.session_state["menu"] == "📦 View Products":
+        st.write("✅ Navigating to 📦 View Products")
         view_products()
     elif st.session_state["menu"] == "📤 Import/Export Data":
+        st.write("✅ Navigating to 📤 Import/Export Data")
         import_export_data()
+
 
 if __name__ == "__main__":
     main()
