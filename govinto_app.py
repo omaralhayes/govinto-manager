@@ -43,7 +43,8 @@ def login():
 
     # ✅ إدخال اسم المستخدم وكلمة المرور
     username = st.sidebar.text_input("👤 Username", key="username")
-    password = st.sidebar.text_input("🔑 Password", type="password", key="password", type="password")
+    password = st.sidebar.text_input("🔑 Password", type="password", key="password")
+
     login_button = st.sidebar.button("🔓 Login")
 
     # ✅ عند الضغط على زر تسجيل الدخول
