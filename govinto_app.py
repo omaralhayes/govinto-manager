@@ -6,6 +6,16 @@ import plotly.graph_objects as go
 import firebase_admin
 from firebase_admin import credentials, firestore
 
+if "menu" not in st.session_state:
+    st.session_state["menu"] = "🏠 Home"  # تعيين الصفحة الافتراضية
+
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False  # المستخدم غير مسجل دخول
+
+if "role" not in st.session_state:
+    st.session_state["role"] = "user"  # تعيين دور المستخدم الافتراضي
+
+
 # تحميل بيانات Firebase
 try:
     firebase_config = {
