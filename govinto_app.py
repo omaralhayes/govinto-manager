@@ -324,27 +324,6 @@ def home():
     st.title("🏠 Welcome to Govinto Manager!")
     st.write("📊 Below is a quick overview of your store's performance.")
 
-    # ✅ أزرار التنقل السريع إلى الصفحات الأخرى
-    col1, col2, col3, col4 = st.columns(4)
-
-    with col1:
-        if st.button("🏠 Home"):
-            home()  # ✅ ينقل المستخدم إلى الصفحة الرئيسية
-
-    with col2:
-        if st.button("➕ Add Product"):
-            add_product()  # ✅ ينقل المستخدم إلى صفحة إضافة منتج
-
-    with col3:
-        if st.button("📦 View Products"):
-            view_products()  # ✅ ينقل المستخدم إلى صفحة عرض المنتجات
-
-    with col4:
-        if st.button("📤 Import/Export Data"):
-            import_export_data()  # ✅ ينقل المستخدم إلى صفحة استيراد/تصدير البيانات
-
-    st.markdown("---")
-
     # ✅ جلب بيانات المنتجات والفئات من Firestore
     products_ref = db.collection("products").stream()
     categories_ref = db.collection("categories").stream()
@@ -381,8 +360,6 @@ def home():
         st.info("No products available yet!")
 
     st.markdown("---")
-
-
 
 
       
