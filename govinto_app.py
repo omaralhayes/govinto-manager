@@ -410,11 +410,9 @@ def main():
     st.sidebar.title("📌 Menu")
 
     if st.session_state["role"] in ["developer", "user"]:
-    menu = ["🏠 Home", "➕ Add Product", "📦 View Products", "📤 Import/Export Data"]
-    if st.session_state["role"] == "developer":
-        menu.insert(2, "📂 Manage Categories")  # إضافة خيار الفئات للمطور فقط
-
-
+        menu = ["🏠 Home", "➕ Add Product", "📦 View Products", "📤 Import/Export Data"]
+        if st.session_state["role"] == "developer":
+            menu.insert(2, "📂 Manage Categories")  # إضافة خيار الفئات للمطور فقط
 
     choice = st.sidebar.radio("📍 Select an option", menu)
 
