@@ -329,7 +329,7 @@ def home():
     
     with col1:
         if st.button("🏠 Home", key="nav_home"):
-            st.experimental_set_query_params(page="🏠 Home")
+            st.experimental_set_query_params(page="home()")
             st.rerun()
     
     with col2:
