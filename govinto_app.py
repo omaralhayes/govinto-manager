@@ -319,8 +319,8 @@ def add_product():
 
 def home():
   
-        login()
-        return  # ⛔ منع تحميل باقي الصفحة إذا لم يتم تسجيل الدخول
+    login()
+    return  # ⛔ منع تحميل باقي الصفحة إذا لم يتم تسجيل الدخول
 
     st.title("🏠 Welcome to Govinto Manager!")
     st.write("📊 Below is a quick overview of your store's performance.")
