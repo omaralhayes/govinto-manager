@@ -28,9 +28,60 @@ except Exception as e:
     st.error(f"❌ خطأ في تحميل Firebase: {e}")
     st.stop()
 
+# ✅ هنا يجب إضافة الدالة
+def get_user_from_firestore(username):
+    """جلب بيانات المستخدم من Firestore"""
+    user_ref = db.collection("users").document(username).get()
+    if user_ref.exists:
+        return user_ref.to_dict()
+    return None
+
+def login():
+    """نظام تسجيل الدخول والتحكم في صلاحيات المستخدمين"""
+
+    st.sidebar.subheader("🔐 Login")
+
+    # ✅ إدخال اسم المستخدم وكلمة المرور
+    username = st.sidebar.text_input("👤 Username", key="username")
+    password = st.sidebar.text_input("🔑 Password", type="password", key="password", type="password")
+    login_button = st.sidebar.button("🔓 Login")
+
+    # ✅ عند الضغط على زر تسجيل الدخول
+    if login_button:
+        user_data = get_user_from_firestore(username)
+        
+        if user_data:
+            if user_data["password"] == password:
+                st.session_state["authenticated"] = True
+                st.session_state["role"] = user_data["role"]
+                st.session_state["username"] = username
+                st.success(f"✅ Welcome, {username}!")
+                st.rerun()
+            else:
+                st.error("❌ Incorrect password!")
+        else:
+            st.error("❌ Username not found!")
+
+    # ✅ تسجيل الخروج
+    if "authenticated" in st.session_state and st.sidebar.button("🚪 Logout"):
+        st.session_state.clear()
+        st.rerun()
+  
+
+
 
 def manage_categories():
     """إدارة الفئات والفئات الفرعية باستخدام Firestore فقط"""
+
+    # ✅ الحماية: السماح فقط للمطور بالوصول إلى هذه الصفحة
+    if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
+        st.warning("🔐 Please log in to access this page.")
+        st.stop()  # ⛔️ يمنع تشغيل الصفحة إذا لم يكن المستخدم مسجلاً للدخول
+
+    if st.session_state["role"] != "developer":
+        st.warning("❌ You do not have permission to access this page.")
+        st.stop()  # ⛔️ يمنع تشغيل الصفحة إذا لم يكن المستخدم "developer"
+
     st.subheader("Manage Categories and Subcategories")
     
     categories_ref = db.collection("categories")
@@ -66,6 +117,12 @@ def manage_categories():
 
 def view_products():
     """عرض المنتجات من Firestore باستخدام st.dataframe() بنفس التنسيق الداكن"""
+
+    # ✅ الحماية: منع الوصول للمستخدمين غير المسجلين
+    if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
+        st.warning("🔐 Please log in to access this page.")
+        st.stop()  # ⛔️ يمنع تشغيل الصفحة إذا لم يكن المستخدم مسجلاً للدخول
+
     st.subheader("📦 View Products")
 
     # ✅ جلب جميع المنتجات من Firestore
@@ -131,6 +188,12 @@ def view_products():
 
 def import_export_data():
     """استيراد وتصدير البيانات إلى Firestore"""
+
+    # ✅ الحماية: منع الوصول للمستخدمين غير المسجلين
+    if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
+        st.warning("🔐 Please log in to access this page.")
+        st.stop()  # ⛔️ يمنع تشغيل الصفحة إذا لم يكن المستخدم مسجلاً للدخول
+
     st.subheader("📤 Import/Export Data")
 
     # ✅ تصدير البيانات بتنسيق مطابق لـ View Products
@@ -198,6 +261,12 @@ def import_export_data():
 
 def add_product():
     """إضافة منتج جديد مباشرة إلى Firestore"""
+
+    # ✅ الحماية: منع الوصول للمستخدمين غير المسجلين
+    if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
+        st.warning("🔐 Please log in to access this page.")
+        st.stop()  # ⛔️ يمنع تشغيل الصفحة إذا لم يكن المستخدم مسجلاً للدخول
+
     st.subheader("Add New Product")
 
     categories = [doc.id for doc in db.collection("categories").stream()]
@@ -225,15 +294,20 @@ def add_product():
             "supplier_orders": supplier_orders, "supplier_price": supplier_price,
             "store_price": store_price,
             "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-
         })
         st.success("✅ Product added successfully!")
         st.rerun()
 
 
+
 def home():
     """ الصفحة الرئيسية - لوحة معلومات تفاعلية """
+
+    # ✅ الحماية: منع الوصول للمستخدمين غير المسجلين
+    if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
+        st.warning("🔐 Please log in to access this page.")
+        st.stop()  # ⛔️ يمنع تشغيل الصفحة إذا لم يكن المستخدم مسجلاً للدخول
+
     st.title("🏠 Welcome to Govinto Manager!")
     st.write("📊 Below is a quick overview of your store's performance.")
 
@@ -298,20 +372,28 @@ def home():
 
 
 def main():
-    """واجهة التطبيق الرئيسية مع تحسين تجربة المستخدم وإضافة زر 'Add to Home Screen'."""
+    """واجهة التطبيق الرئيسية مع تسجيل الدخول وإدارة الصلاحيات."""
+
+    # ✅ استدعاء نظام تسجيل الدخول
+    login()
+
+    # ✅ التحقق مما إذا كان المستخدم قد سجل الدخول
+    if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
+        st.warning("🔐 Please log in to access the application.")
+        return  # ⛔️ يمنع الوصول للتطبيق إذا لم يتم تسجيل الدخول
 
     # ✅ شعار المتجر في القائمة الجانبية
     st.sidebar.image("govinto_logo.png", use_container_width=True)
 
-    # ✅ قائمة التنقل الجانبية
+    # ✅ قائمة التنقل الجانبية بناءً على دور المستخدم
     st.sidebar.title("📌 Menu")
-    menu = ["🏠 Home", "➕ Add Product", "📂 Manage Categories", "📦 View Products", "📤 Import/Export Data"]
 
-    # ✅ التحقق مما إذا كانت `menu` مخزنة في `session_state`، وإلا تعيينها إلى Home
-    if "menu" not in st.session_state:
-        st.session_state["menu"] = "🏠 Home"
+    if st.session_state["role"] == "developer":
+        menu = ["🏠 Home", "➕ Add Product", "📂 Manage Categories", "📦 View Products", "📤 Import/Export Data"]
+    else:  # 🟢 المستخدم العادي يمكنه فقط الوصول إلى هذه الصفحات
+        menu = ["➕ Add Product", "📦 View Products", "📤 Import/Export Data"]
 
-    choice = st.sidebar.radio("📍 Select an option", menu, index=menu.index(st.session_state["menu"]))
+    choice = st.sidebar.radio("📍 Select an option", menu)
 
     # ✅ إضافة زر "Install App" في القائمة الجانبية
     st.sidebar.markdown("---")
