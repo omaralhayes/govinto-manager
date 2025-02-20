@@ -324,6 +324,31 @@ def home():
     st.title("🏠 Welcome to Govinto Manager!")
     st.write("📊 Below is a quick overview of your store's performance.")
 
+    # ✅ أزرار التنقل السريع إلى الصفحات الأخرى
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        if st.button("🏠 Home", key="nav_home"):
+            st.experimental_set_query_params(page="🏠 Home")
+            st.rerun()
+    
+    with col2:
+        if st.button("➕ Add Product", key="nav_add_product"):
+            st.experimental_set_query_params(page="➕ Add Product")
+            st.rerun()
+    
+    with col3:
+        if st.button("📦 View Products", key="nav_view_products"):
+            st.experimental_set_query_params(page="📦 View Products")
+            st.rerun()
+    
+    with col4:
+        if st.button("📤 Import/Export Data", key="nav_import_export"):
+            st.experimental_set_query_params(page="📤 Import/Export Data")
+            st.rerun()
+
+    st.markdown("---")
+
     # ✅ جلب بيانات المنتجات والفئات من Firestore
     products_ref = db.collection("products").stream()
     categories_ref = db.collection("categories").stream()
@@ -360,6 +385,7 @@ def home():
         st.info("No products available yet!")
 
     st.markdown("---")
+
 
 
       
