@@ -383,12 +383,14 @@ def home():
         if st.button("📂 Manage Categories") and st.session_state["role"] == "developer":
             if st.session_state["menu"] != "📂 Manage Categories":
                 st.session_state["menu"] = "📂 Manage Categories"
+                 st.write("🔄 Reloading...")  # مراقبة التغيير
                 st.rerun()
     
     with col3:
         if st.button("📦 View Products"):
             if st.session_state["menu"] != "📦 View Products":
                 st.session_state["menu"] = "📦 View Products"
+                 st.write("🔄 Reloading...")  # مراقبة التغيير
                 st.rerun()
 
     
