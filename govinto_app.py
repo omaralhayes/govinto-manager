@@ -44,8 +44,11 @@ def get_user_from_firestore(username):
 
 
 def login():
-    """نظام تسجيل الدخول مع منع الأخطاء عند إعادة التشغيل."""
+    """نظام تسجيل الدخول مع شعار Govinto في الأعلى."""
     
+    # ✅ إضافة شعار المتجر في أعلى القائمة الجانبية
+    st.sidebar.image("govinto_logo.png", use_container_width=True)
+
     st.sidebar.subheader("🔐 Login")
 
     # ✅ إدخال اسم المستخدم وكلمة المرور
@@ -86,7 +89,6 @@ def login():
             st.session_state.clear()
             st.query_params["logged_in"] = "false"
             st.rerun()
-
   
 
 
@@ -400,7 +402,6 @@ def main():
 
     # ✅ التحقق مما إذا كان المستخدم قد سجل الدخول
     if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
-        st.sidebar.image("govinto_logo.png", use_container_width=True)  # ✅ إضافة الشعار في شاشة تسجيل الدخول
         st.warning("🔐 Please log in to access the application.")
         return  # ⛔️ يمنع الوصول للتطبيق إذا لم يتم تسجيل الدخول
 
