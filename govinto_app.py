@@ -405,7 +405,7 @@ def horizontal_menu():
 def main():
     """واجهة التطبيق الرئيسية مع تسجيل الدخول وإدارة الصلاحيات."""
 
-    # ✅ تشغيل نظام تسجيل الدخول
+    # ✅ عرض تسجيل الدخول في الصفحة الرئيسية
     login()
 
     # ✅ التحقق مما إذا كان المستخدم قد سجل الدخول
@@ -413,33 +413,44 @@ def main():
         st.warning("🔐 Please log in to access the application.")
         return  # ⛔️ يمنع الوصول للتطبيق إذا لم يتم تسجيل الدخول
 
-    # ✅ قائمة التنقل الجانبية
+    # ✅ قائمة التنقل الجانبية بدون شعار بعد تسجيل الدخول
     st.sidebar.title("📌 Menu")
 
     if st.session_state["role"] in ["developer", "user"]:
         menu = ["🏠 Home", "➕ Add Product", "📦 View Products", "📤 Import/Export Data"]
         if st.session_state["role"] == "developer":
-            menu.insert(2, "📂 Manage Categories")  # ✅ إضافة "Manage Categories" للمطور فقط
+            menu.insert(2, "📂 Manage Categories")  # ✅ إضافة خيار "Manage Categories" للمطور فقط
 
     choice = st.sidebar.radio("📍 Select an option", menu)
 
-    # ✅ تحديث `menu` في `session_state` فقط إذا تغير الاختيار
-    if choice != st.session_state["menu"]:
-        st.session_state["menu"] = choice
-        st.rerun()
+    # ✅ إضافة زر "Install App" في القائمة الجانبية
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("📲 Install App")
+    if st.sidebar.button("Add to Home Screen"):
+        st.sidebar.info("""
+        **📲 How to install this app on your phone:**
+        
+        1️⃣ Open this app in **Chrome (Android)** or **Safari (iPhone).**  
+        2️⃣ Tap on **'Share'** (iPhone) or **'⋮ Menu'** (Android).  
+        3️⃣ Select **'Add to Home Screen'.**  
+        4️⃣ Tap **'Add'**, and now you can access this app like a native app! 🚀
+        """)
 
-    # ✅ تشغيل الصفحة المختارة بناءً على القائمة الجانبية أو الأفقية
-    if st.session_state["menu"] == "🏠 Home":
+    # ✅ تشغيل الصفحة المختارة من القائمة الجانبية
+    if choice == "🏠 Home":
         home()
-    elif st.session_state["menu"] == "➕ Add Product":
+    elif choice == "➕ Add Product":
         add_product()
-    elif st.session_state["menu"] == "📂 Manage Categories":
+    elif choice == "📂 Manage Categories":
         manage_categories()
-    elif st.session_state["menu"] == "📦 View Products":
+    elif choice == "📦 View Products":
         view_products()
-    elif st.session_state["menu"] == "📤 Import/Export Data":
+    elif choice == "📤 Import/Export Data":
         import_export_data()
 
-    # ✅ إضافة القائمة الأفقية في أسفل كل صفحة
-    st.markdown("---")
-    horizontal_menu()
+    # ✅ تحديث `menu` في `session_state`
+    st.session_state["menu"] = choice
+
+# ✅ تشغيل التطبيق
+if __name__ == "__main__":
+    main()
