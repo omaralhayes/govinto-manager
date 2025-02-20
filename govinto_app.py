@@ -9,12 +9,6 @@ from firebase_admin import credentials, firestore
 if "menu" not in st.session_state:
     st.session_state["menu"] = "🏠 Home"  # تعيين الصفحة الافتراضية
 
-if "authenticated" not in st.session_state:
-    st.session_state["authenticated"] = False  # المستخدم غير مسجل دخول
-
-if "role" not in st.session_state:
-    st.session_state["role"] = "user"  # تعيين دور المستخدم الافتراضي
-
 
 # تحميل بيانات Firebase
 try:
@@ -367,19 +361,22 @@ def home():
 
     # ✅ أزرار الاختصار
     st.subheader("🚀 Quick Access")
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        if st.button("➕ Add New Product"):
+    if st.button("➕ Add New Product"):
+        if st.session_state["menu"] != "➕ Add Product":
             st.session_state["menu"] = "➕ Add Product"
             st.rerun()
-    with col2:
-        if st.button("📂 Manage Categories"):
+    
+    if st.button("📂 Manage Categories"):
+        if st.session_state["menu"] != "📂 Manage Categories":
             st.session_state["menu"] = "📂 Manage Categories"
             st.rerun()
-    with col3:
-        if st.button("📦 View Products"):
+    
+    if st.button("📦 View Products"):
+        if st.session_state["menu"] != "📦 View Products":
             st.session_state["menu"] = "📦 View Products"
             st.rerun()
+    st.write("📌 Current menu:", st.session_state["menu"])
+
 
 
 
