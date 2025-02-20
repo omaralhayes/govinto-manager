@@ -274,24 +274,25 @@ def home():
 
     st.markdown("---")
 
-   # ✅ أزرار الاختصار
+   # ✅ أزرار الاختصار في أسفل الصفحة
+st.markdown("---")
 st.subheader("🚀 Quick Access")
 col1, col2, col3 = st.columns(3)
 
 with col1:
     if st.button("➕ Add New Product"):
-        st.session_state["selected_page"] = "➕ Add Product"
-        st.experimental_rerun()
+        st.session_state["menu"] = "➕ Add Product"
+        st.rerun()
 
 with col2:
     if st.button("📤 Import/Export Data"):
-        st.session_state["selected_page"] = "📤 Import/Export Data"
-        st.experimental_rerun()
+        st.session_state["menu"] = "📤 Import/Export Data"
+        st.rerun()
 
 with col3:
     if st.button("📦 View Products"):
-        st.session_state["selected_page"] = "📦 View Products"
-        st.experimental_rerun()
+        st.session_state["menu"] = "📦 View Products"
+        st.rerun()
 
       
 
@@ -299,27 +300,19 @@ with col3:
 
 def main():
     """واجهة التطبيق الرئيسية مع تحسين تجربة المستخدم وإضافة زر 'Add to Home Screen'."""
-    
+
     # ✅ شعار المتجر في القائمة الجانبية
     st.sidebar.image("govinto_logo.png", use_container_width=True)
 
     # ✅ قائمة التنقل الجانبية
     st.sidebar.title("📌 Menu")
     menu = ["🏠 Home", "➕ Add Product", "📂 Manage Categories", "📦 View Products", "📤 Import/Export Data"]
-    choice = st.sidebar.radio("📍 Select an option", menu)
 
-    # ✅ إضافة زر "Add to Home Screen" في القائمة الجانبية
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("📲 Install App")
-    if st.sidebar.button("Add to Home Screen"):
-        st.sidebar.info("""
-        **How to install this app on your phone:**
-        
-        1️⃣ Open this app in **Chrome (Android)** or **Safari (iPhone).**  
-        2️⃣ Tap on **'Share'** (iPhone) or **'⋮ Menu'** (Android).  
-        3️⃣ Select **'Add to Home Screen'.**  
-        4️⃣ Tap **'Add'**, and now you can access this app like a native app! 🚀
-        """)
+    # ✅ التحقق مما إذا كانت `menu` مخزنة في `session_state`، وإلا تعيينها إلى Home
+    if "menu" not in st.session_state:
+        st.session_state["menu"] = "🏠 Home"
+
+    choice = st.sidebar.radio("📍 Select an option", menu, index=menu.index(st.session_state["menu"]))
 
     # ✅ تشغيل الصفحة المختارة من القائمة الجانبية
     if choice == "🏠 Home":
@@ -332,6 +325,9 @@ def main():
         view_products()
     elif choice == "📤 Import/Export Data":
         import_export_data()
+
+    # ✅ تحديث `menu` في `session_state`
+    st.session_state["menu"] = choice
 
 # ✅ تشغيل التطبيق
 if __name__ == "__main__":
