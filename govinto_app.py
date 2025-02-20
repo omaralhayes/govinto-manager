@@ -326,26 +326,22 @@ def home():
 
     # ✅ أزرار التنقل السريع إلى الصفحات الأخرى
     col1, col2, col3, col4 = st.columns(4)
-    
+
     with col1:
-        if st.button("🏠 Home", key="nav_home()"):
-            st.experimental_set_query_params(page="🏠 Home")
-            st.rerun()
-    
+        if st.button("🏠 Home"):
+            home()  # ✅ ينقل المستخدم إلى الصفحة الرئيسية
+
     with col2:
-        if st.button("➕ Add Product", key="nav_add_product"):
-            st.experimental_set_query_params(page="➕ Add Product")
-            st.rerun()
-    
+        if st.button("➕ Add Product"):
+            add_product()  # ✅ ينقل المستخدم إلى صفحة إضافة منتج
+
     with col3:
-        if st.button("📦 View Products", key="nav_view_products"):
-            st.experimental_set_query_params(page="📦 View Products")
-            st.rerun()
-    
+        if st.button("📦 View Products"):
+            view_products()  # ✅ ينقل المستخدم إلى صفحة عرض المنتجات
+
     with col4:
-        if st.button("📤 Import/Export Data", key="nav_import_export"):
-            st.experimental_set_query_params(page="📤 Import/Export Data")
-            st.rerun()
+        if st.button("📤 Import/Export Data"):
+            import_export_data()  # ✅ ينقل المستخدم إلى صفحة استيراد/تصدير البيانات
 
     st.markdown("---")
 
@@ -385,6 +381,7 @@ def home():
         st.info("No products available yet!")
 
     st.markdown("---")
+
 
 
 
