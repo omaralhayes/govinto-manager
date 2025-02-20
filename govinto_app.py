@@ -360,25 +360,6 @@ def home():
 
     st.markdown("---")
 
-    # ✅ أزرار الاختصار في أسفل الصفحة
-    st.markdown("### 🚀 Quick Access")
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        if st.button("➕ Add New Product", key="add_product()"):
-            st.session_state["redirect"] = "➕ Add Product"
-            st.rerun()
-
-    with col2:
-        if st.button("📤 Import/Export Data", key="quick_import_export"):
-            st.session_state["redirect"] = "📤 Import/Export Data"
-            st.rerun()
-
-    with col3:
-        if st.button("📦 View Products", key="quick_view_products"):
-            st.session_state["redirect"] = "📦 View Products"
-            st.rerun()
-
 
       
 
