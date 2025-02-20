@@ -375,23 +375,23 @@ def home():
         if st.button("➕ Add New Product"):
             if st.session_state["menu"] != "➕ Add Product":
                 st.session_state["menu"] = "➕ Add Product"
-                st.write("🔄 Reloading...")  # مراقبة التغيير
+                st.write("🔄 Changing menu to ➕ Add Product")
                 st.rerun()
-
     
     with col2:
         if st.button("📂 Manage Categories") and st.session_state["role"] == "developer":
             if st.session_state["menu"] != "📂 Manage Categories":
                 st.session_state["menu"] = "📂 Manage Categories"
-                st.write("🔄 Reloading...")  # مراقبة التغيير
+                st.write("🔄 Changing menu to 📂 Manage Categories")
                 st.rerun()
     
     with col3:
         if st.button("📦 View Products"):
             if st.session_state["menu"] != "📦 View Products":
                 st.session_state["menu"] = "📦 View Products"
-                st.write("🔄 Reloading...")  # مراقبة التغيير
+                st.write("🔄 Changing menu to 📦 View Products")
                 st.rerun()
+
 
     
     # ✅ عرض الحالة الحالية لـ menu للمساعدة في تصحيح الأخطاء
