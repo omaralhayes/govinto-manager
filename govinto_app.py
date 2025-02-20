@@ -320,10 +320,10 @@ def add_product():
 def home():
     """ الصفحة الرئيسية - لوحة معلومات تفاعلية """
     
-    # ✅ التأكد من تسجيل الدخول
+    # ✅ التحقق من تسجيل الدخول، إذا لم يكن المستخدم مسجلًا، عرض نموذج تسجيل الدخول
     if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
-        st.warning("🔐 Please log in to access the dashboard.")
-        st.stop()
+        login()
+        return  # ⛔ منع تحميل باقي الصفحة إذا لم يتم تسجيل الدخول
 
     st.title("🏠 Welcome to Govinto Manager!")
     st.write("📊 Below is a quick overview of your store's performance.")
@@ -373,7 +373,6 @@ def home():
 
 
 def main():
-    login()
 
     # ✅ التأكد من أن menu معرف قبل استخدامه
     if "menu" not in st.session_state:
