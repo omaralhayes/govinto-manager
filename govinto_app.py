@@ -45,7 +45,7 @@ def get_user_from_firestore(username):
 
 def login():
     """نظام تسجيل الدخول وتحسين معالجة الأخطاء"""
-
+    
     st.sidebar.subheader("🔐 Login")
 
     # ✅ إدخال اسم المستخدم وكلمة المرور
@@ -60,24 +60,28 @@ def login():
         
         if user_data:
             if user_data.get("password") == password:
-                if "authenticated" not in st.session_state:
-                    st.session_state["authenticated"] = True
-                if "role" not in st.session_state:
-                    st.session_state["role"] = user_data.get("role", "user")  # الافتراضي "user"
-                if "username" not in st.session_state:
-                    st.session_state["username"] = username  # تخزين اسم المستخدم
-                
+                # ✅ تحديث الجلسة ولكن باستخدام `st.session_state.update()` لتجنب الأخطاء
+                st.session_state.update({
+                    "authenticated": True,
+                    "role": user_data.get("role", "user"),  # الافتراضي "user"
+                    "username": username
+                })
+
                 st.success(f"✅ Welcome, {username}!")
+                
+                # ✅ استخدام `st.experimental_rerun()` فقط بعد تحديث الجلسة
                 st.experimental_rerun()
             else:
                 st.error("❌ Incorrect password! Please try again.")
         else:
             st.error("❌ Username not found! Please check your credentials.")
 
-    # ✅ تسجيل الخروج
-    if "authenticated" in st.session_state and st.session_state["authenticated"]:
+    # ✅ زر تسجيل الخروج
+    if st.session_state.get("authenticated"):
         if st.sidebar.button("🚪 Logout"):
-            st.session_state.clear()  # حذف جميع البيانات من `session_state`
+            # ✅ حذف جميع البيانات من `session_state` بشكل آمن
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
             st.experimental_rerun()
 
   
