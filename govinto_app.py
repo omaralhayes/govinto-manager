@@ -366,24 +366,9 @@ def home():
 
     st.markdown("---")
 
-    st.subheader("🚀 Quick Access")
+
     
-    st.subheader("🚀 Quick Access")
-    
-    tabs = st.tabs(["🏠 Home", "➕ Add Product", "📂 Manage Categories", "📦 View Products"])
-    
-    tab_mapping = {
-        0: "🏠 Home",
-        1: "➕ Add Product",
-        2: "📂 Manage Categories",
-        3: "📦 View Products",
-    }
-    
-    for index, tab in enumerate(tabs):
-        with tab:
-            if st.session_state["menu"] != tab_mapping[index]:
-                st.session_state["menu"] = tab_mapping[index]
-                st.rerun()
+  
 
 
 
