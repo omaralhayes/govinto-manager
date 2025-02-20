@@ -49,7 +49,7 @@ def login():
     st.sidebar.subheader("🔐 Login")
 
     # ✅ إدخال اسم المستخدم وكلمة المرور
-    username = st.sidebar.text_input("👤 Username", key="username")
+    username = st.sidebar.text_input("👤 Username", key="username_input")
     password = st.sidebar.text_input("🔑 Password", type="password", key="password_input")
 
     login_button = st.sidebar.button("🔓 Login")
@@ -60,9 +60,13 @@ def login():
         
         if user_data:
             if user_data.get("password") == password:
-                st.session_state["authenticated"] = True
-                st.session_state["role"] = user_data.get("role", "user")  # الافتراضي "user" لو لم يُحدد
-                st.session_state["username"] = username
+                if "authenticated" not in st.session_state:
+                    st.session_state["authenticated"] = True
+                if "role" not in st.session_state:
+                    st.session_state["role"] = user_data.get("role", "user")  # الافتراضي "user"
+                if "username" not in st.session_state:
+                    st.session_state["username"] = username  # تخزين اسم المستخدم
+                
                 st.success(f"✅ Welcome, {username}!")
                 st.experimental_rerun()
             else:
@@ -71,9 +75,10 @@ def login():
             st.error("❌ Username not found! Please check your credentials.")
 
     # ✅ تسجيل الخروج
-    if "authenticated" in st.session_state and st.sidebar.button("🚪 Logout"):
-        st.session_state.clear()
-        st.experimental_rerun()
+    if "authenticated" in st.session_state and st.session_state["authenticated"]:
+        if st.sidebar.button("🚪 Logout"):
+            st.session_state.clear()  # حذف جميع البيانات من `session_state`
+            st.experimental_rerun()
 
   
 
