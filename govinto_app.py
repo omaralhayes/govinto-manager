@@ -43,6 +43,44 @@ def get_user_from_firestore(username):
         return None
 
 
+def horizontal_menu():
+    """قائمة أفقية للتنقل بين الصفحات للمستخدم العادي"""
+    st.markdown(
+        """
+        <style>
+            .horizontal-menu {
+                display: flex;
+                justify-content: center;
+                gap: 15px;
+                background-color: #222;
+                padding: 10px;
+                border-radius: 10px;
+            }
+            .horizontal-menu button {
+                background-color: #444;
+                color: white;
+                padding: 8px 15px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 14px;
+            }
+            .horizontal-menu button:hover {
+                background-color: #555;
+            }
+        </style>
+        <div class="horizontal-menu">
+            <button onclick="window.location.href='?page=home'">🏠 Home</button>
+            <button onclick="window.location.href='?page=add_product'">➕ Add Product</button>
+            <button onclick="window.location.href='?page=view_products'">📦 View Products</button>
+            <button onclick="window.location.href='?page=import_export'">📤 Import/Export</button>
+        </div>
+        <br>
+        """,
+        unsafe_allow_html=True
+    )
+
+
 def login():
     """نظام تسجيل الدخول، يظهر في الصفحة الرئيسية قبل تسجيل الدخول، وفي القائمة الجانبية بعده."""
     
@@ -90,6 +128,9 @@ def manage_categories():
         st.warning("🔐 Please log in to access this page.")
         st.stop()  # ⛔️ يمنع تشغيل الصفحة إذا لم يكن المستخدم مسجلاً للدخول
 
+    horizontal_menu()  # ✅ إظهار القائمة العلوية في كل صفحة
+
+
     if st.session_state["role"] != "developer":
         st.warning("❌ You do not have permission to access this page.")
         st.stop()  # ⛔️ يمنع تشغيل الصفحة إذا لم يكن المستخدم "developer"
@@ -134,6 +175,9 @@ def view_products():
     if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
         st.warning("🔐 Please log in to access this page.")
         st.stop()  # ⛔️ يمنع تشغيل الصفحة إذا لم يكن المستخدم مسجلاً للدخول
+
+    horizontal_menu()  # ✅ إظهار القائمة العلوية في كل صفحة
+
 
     st.subheader("📦 View Products")
 
@@ -205,6 +249,9 @@ def import_export_data():
     if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
         st.warning("🔐 Please log in to access this page.")
         st.stop()  # ⛔️ يمنع تشغيل الصفحة إذا لم يكن المستخدم مسجلاً للدخول
+
+    horizontal_menu()  # ✅ إظهار القائمة العلوية في كل صفحة
+
 
     st.subheader("📤 Import/Export Data")
 
@@ -279,6 +326,9 @@ def add_product():
         st.warning("🔐 Please log in to access this page.")
         st.stop()  # ⛔️ يمنع تشغيل الصفحة إذا لم يكن المستخدم مسجلاً للدخول
 
+    horizontal_menu()  # ✅ إظهار القائمة العلوية في كل صفحة
+
+
     st.subheader("Add New Product")
 
     categories = [doc.id for doc in db.collection("categories").stream()]
@@ -319,6 +369,11 @@ def home():
     if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
         st.warning("🔐 Please log in to access this page.")
         st.stop()  # ⛔️ يمنع تشغيل الصفحة إذا لم يكن المستخدم مسجلاً للدخول
+
+    horizontal_menu()  # ✅ إظهار القائمة العلوية في كل صفحة
+
+
+      
 
     st.title("🏠 Welcome to Govinto Manager!")
     st.write("📊 Below is a quick overview of your store's performance.")
