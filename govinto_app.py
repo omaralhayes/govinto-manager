@@ -368,28 +368,22 @@ def home():
 
     st.subheader("🚀 Quick Access")
     
-    quick_access_options = {
-        "🏠 Home": "🏠 Home",
-        "➕ Add Product": "➕ Add Product",
-        "📂 Manage Categories": "📂 Manage Categories",
-        "📦 View Products": "📦 View Products",
+    st.subheader("🚀 Quick Access")
+    
+    tabs = st.tabs(["🏠 Home", "➕ Add Product", "📂 Manage Categories", "📦 View Products"])
+    
+    tab_mapping = {
+        0: "🏠 Home",
+        1: "➕ Add Product",
+        2: "📂 Manage Categories",
+        3: "📦 View Products",
     }
     
-    selected_page = st.radio(
-        "🔹 Choose a section:",
-        list(quick_access_options.keys()),
-        horizontal=True
-    )
-    
-    if st.session_state["menu"] != quick_access_options[selected_page]:
-        st.session_state["menu"] = quick_access_options[selected_page]
-        st.rerun()
-
-
-
-    
-    # ✅ عرض الحالة الحالية لـ menu للمساعدة في تصحيح الأخطاء
-    st.write("📌 Current menu:", st.session_state["menu"])
+    for index, tab in enumerate(tabs):
+        with tab:
+            if st.session_state["menu"] != tab_mapping[index]:
+                st.session_state["menu"] = tab_mapping[index]
+                st.rerun()
 
 
 
