@@ -44,51 +44,40 @@ def get_user_from_firestore(username):
 
 
 def login():
-    """نظام تسجيل الدخول مع شعار Govinto في الأعلى."""
+    """نظام تسجيل الدخول، يظهر في الصفحة الرئيسية قبل تسجيل الدخول، وفي القائمة الجانبية بعده."""
     
-    # ✅ إضافة شعار المتجر في أعلى القائمة الجانبية
-    st.sidebar.image("govinto_logo.png", use_container_width=True)
+    if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
+        # ✅ عرض نموذج تسجيل الدخول في الصفحة الرئيسية عند عدم تسجيل الدخول
+        st.image("govinto_logo.png", use_container_width=True)  # ✅ شعار Govinto
+        st.subheader("🔐 Login")
 
-    st.sidebar.subheader("🔐 Login")
+        username = st.text_input("👤 Username", key="username_input_home")
+        password = st.text_input("🔑 Password", type="password", key="password_input_home")
+        login_button = st.button("🔓 Login")
 
-    # ✅ إدخال اسم المستخدم وكلمة المرور
-    username = st.sidebar.text_input("👤 Username", key="username_input")
-    password = st.sidebar.text_input("🔑 Password", type="password", key="password_input")
-
-    login_button = st.sidebar.button("🔓 Login")
-
-    # ✅ عند الضغط على زر تسجيل الدخول
-    if login_button:
-        user_data = get_user_from_firestore(username.strip())  # إزالة المسافات الزائدة
-        
-        if user_data:
-            if user_data.get("password") == password:
-                # ✅ تحديث بيانات الجلسة بعد تسجيل الدخول
+        if login_button:
+            user_data = get_user_from_firestore(username.strip())
+            
+            if user_data and user_data.get("password") == password:
                 st.session_state["authenticated"] = True
-                st.session_state["role"] = user_data.get("role", "user")  # الافتراضي "user"
+                st.session_state["role"] = user_data.get("role", "user")
                 st.session_state["username"] = username
 
                 st.success(f"✅ Welcome, {username}!")
-
-                # ✅ استخدام `st.query_params` بدلاً من `st.experimental_set_query_params`
-                st.query_params["logged_in"] = "true"
-
-                # ✅ تأخير إعادة التشغيل لمنع الأخطاء
                 st.session_state["reload"] = True
                 st.rerun()
-
             else:
-                st.error("❌ Incorrect password! Please try again.")
-        else:
-            st.error("❌ Username not found! Please check your credentials.")
+                st.error("❌ Invalid credentials! Please try again.")
 
-    # ✅ زر تسجيل الخروج
-    if st.session_state.get("authenticated"):
+    else:
+        # ✅ عرض نموذج تسجيل الدخول فقط في القائمة الجانبية بعد تسجيل الدخول
+        st.sidebar.image("govinto_logo.png", use_container_width=True)
+        st.sidebar.subheader(f"✅ Logged in as: {st.session_state['username']}")
+        
         if st.sidebar.button("🚪 Logout"):
-            # ✅ حذف جميع بيانات الجلسة قبل إعادة تشغيل التطبيق
             st.session_state.clear()
-            st.query_params["logged_in"] = "false"
             st.rerun()
+
   
 
 
@@ -397,7 +386,7 @@ def home():
 def main():
     """واجهة التطبيق الرئيسية مع تسجيل الدخول وإدارة الصلاحيات."""
 
-    # ✅ استدعاء نظام تسجيل الدخول
+    # ✅ عرض تسجيل الدخول في الصفحة الرئيسية
     login()
 
     # ✅ التحقق مما إذا كان المستخدم قد سجل الدخول
@@ -405,7 +394,7 @@ def main():
         st.warning("🔐 Please log in to access the application.")
         return  # ⛔️ يمنع الوصول للتطبيق إذا لم يتم تسجيل الدخول
 
-    # ✅ قائمة التنقل الجانبية بناءً على دور المستخدم (بدون الشعار بعد تسجيل الدخول)
+    # ✅ قائمة التنقل الجانبية بدون شعار بعد تسجيل الدخول
     st.sidebar.title("📌 Menu")
 
     if st.session_state["role"] in ["developer", "user"]:
