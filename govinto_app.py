@@ -366,17 +366,17 @@ def home():
 
     with col1:
         if st.button("➕ Add New Product", key="quick_add_product"):
-            st.session_state["redirect_page"] = "➕ Add Product"
+            st.session_state["redirect"] = "➕ Add Product"
             st.experimental_rerun()
 
     with col2:
         if st.button("📤 Import/Export Data", key="quick_import_export"):
-            st.session_state["redirect_page"] = "📤 Import/Export Data"
+            st.session_state["redirect"] = "📤 Import/Export Data"
             st.experimental_rerun()
 
     with col3:
         if st.button("📦 View Products", key="quick_view_products"):
-            st.session_state["redirect_page"] = "📦 View Products"
+            st.session_state["redirect"] = "📦 View Products"
             st.experimental_rerun()
 
 
@@ -403,14 +403,8 @@ def main():
         if st.session_state["role"] == "developer":
             menu.insert(2, "📂 Manage Categories")  # ✅ إضافة خيار "Manage Categories" للمطور فقط
 
-    # ✅ التحقق مما إذا كان هناك إعادة توجيه من Quick Access
-    if "redirect_page" in st.session_state:
-        choice = st.session_state["redirect_page"]
-        del st.session_state["redirect_page"]  # حذف التوجيه بعد التنقل
-    else:
-        choice = st.sidebar.radio("📍 Select an option", menu)
-
   
+    choice = st.sidebar.radio("📍 Select an option", menu)
 
     # ✅ إضافة زر "Install App" في القائمة الجانبية
     st.sidebar.markdown("---")
