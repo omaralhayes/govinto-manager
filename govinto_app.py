@@ -425,17 +425,18 @@ def main():
         st.experimental_rerun()
 
     # ✅ تشغيل الصفحة المختارة بناءً على القائمة الجانبية أو الأفقية
-    if st.session_state["menu"] == "🏠 Home":
-        home()
-    elif st.session_state["menu"] == "➕ Add Product":
-        add_product()
-    elif st.session_state["menu"] == "📂 Manage Categories":
-        manage_categories()
-    elif st.session_state["menu"] == "📦 View Products":
-        view_products()
-    elif st.session_state["menu"] == "📤 Import/Export Data":
-        import_export_data()
+    page_function_mapping = {
+        "🏠 Home": home,
+        "➕ Add Product": add_product,
+        "📂 Manage Categories": manage_categories,
+        "📦 View Products": view_products,
+        "📤 Import/Export Data": import_export_data
+    }
+
+    if st.session_state["menu"] in page_function_mapping:
+        page_function_mapping[st.session_state["menu"]]()  # ✅ تشغيل الصفحة الصحيحة
 
     # ✅ **إضافة القائمة الأفقية في أسفل كل صفحة**
     st.markdown("---")
     horizontal_menu()
+
