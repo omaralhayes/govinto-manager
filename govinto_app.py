@@ -331,7 +331,6 @@ def home():
     st.title("🏠 Welcome to Govinto Manager!")
     st.write("📊 Below is a quick overview of your store's performance.")
 
-
     # ✅ جلب بيانات المنتجات والفئات من Firestore
     products_ref = db.collection("products").stream()
     categories_ref = db.collection("categories").stream()
@@ -370,6 +369,20 @@ def home():
 
     st.markdown("---")
 
+    # ✅ قائمة أفقية للتنقل بين الصفحات
+    st.subheader("🚀 Quick Access")
+    selected_page = st.radio(
+        "📍 Navigate to:",
+        ["🏠 Home", "➕ Add Product", "📦 View Products", "📤 Import/Export Data"] + (["📂 Manage Categories"] if st.session_state["role"] == "developer" else []),
+        horizontal=True
+    )
+
+    # ✅ تحديث القائمة بناءً على session_state
+    if selected_page != st.session_state["menu"]:
+        st.session_state["menu"] = selected_page
+        st.rerun()
+
+
 
     
   
@@ -377,52 +390,23 @@ def home():
 
 
 def main():
+    """ الواجهة الرئيسية للتحكم في التنقل بين الصفحات """
 
     # ✅ التأكد من أن menu معرف قبل استخدامه
     if "menu" not in st.session_state:
         st.session_state["menu"] = "🏠 Home"
 
-    if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
-        st.warning("🔐 Please log in to access the application.")
-        return
-
-    st.sidebar.title("📌 Menu")
-    menu_options = ["🏠 Home", "➕ Add Product", "📦 View Products", "📤 Import/Export Data"]
-    
-    if st.session_state["role"] == "developer":
-        menu_options.insert(2, "📂 Manage Categories")  
-
-    choice = st.sidebar.radio("📍 Select an option", menu_options)
-    
-    if "menu" in st.session_state and choice != st.session_state["menu"]:
-        st.session_state["menu"] = choice
-        st.rerun()
-
-
-    # ✅ تحديث القائمة بناءً على session_state
-    if choice != st.session_state.get("menu"):
-        st.session_state["menu"] = choice
-        st.rerun()  # إعادة تشغيل التطبيق
-
-    # ✅ عرض قيمة menu قبل تشغيل أي صفحة للمساعدة في التصحيح
-    st.write("✅ Debugging: Current menu is", st.session_state["menu"])
-
     # ✅ تشغيل الصفحة بناءً على menu
     if st.session_state["menu"] == "🏠 Home":
         home()
     elif st.session_state["menu"] == "➕ Add Product":
-        st.write("✅ Navigating to ➕ Add Product")  # تتبع الحركة
         add_product()
     elif st.session_state["menu"] == "📂 Manage Categories":
-        st.write("✅ Navigating to 📂 Manage Categories")
         manage_categories()
     elif st.session_state["menu"] == "📦 View Products":
-        st.write("✅ Navigating to 📦 View Products")
         view_products()
     elif st.session_state["menu"] == "📤 Import/Export Data":
-        st.write("✅ Navigating to 📤 Import/Export Data")
         import_export_data()
-
-
+        
 if __name__ == "__main__":
     main()
