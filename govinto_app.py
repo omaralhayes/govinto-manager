@@ -365,8 +365,8 @@ def home():
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        if st.button("➕ Add New Product", key="quick_add_product"):
-            st.session_state["redirect"] = "add_product()"
+        if st.button("➕ Add New Product", key="add_product()"):
+            st.session_state["redirect"] = "➕ Add Product"
             st.rerun()
 
     with col2:
