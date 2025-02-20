@@ -402,10 +402,9 @@ def home():
 def main():
     login()
 
-  
+    # ✅ التأكد من أن menu معرف قبل استخدامه
     if "menu" not in st.session_state:
-    st.session_state["menu"] = "🏠 Home"
-
+        st.session_state["menu"] = "🏠 Home"
 
     if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
         st.warning("🔐 Please log in to access the application.")
@@ -424,22 +423,20 @@ def main():
         st.session_state["menu"] = choice
         st.rerun()  # إعادة تشغيل التطبيق
 
-# ✅ عرض قيمة menu قبل تشغيل أي صفحة للمساعدة في التصحيح
-st.write("✅ Debugging: Current menu is", st.session_state["menu"])
+    # ✅ عرض قيمة menu قبل تشغيل أي صفحة للمساعدة في التصحيح
+    st.write("✅ Debugging: Current menu is", st.session_state["menu"])
 
-# ✅ تشغيل الصفحة بناءً على menu
-if st.session_state["menu"] == "🏠 Home":
-    home()
-elif st.session_state["menu"] == "➕ Add Product":
-    add_product()
-elif st.session_state["menu"] == "📂 Manage Categories":
-    manage_categories()
-elif st.session_state["menu"] == "📦 View Products":
-    view_products()
-elif st.session_state["menu"] == "📤 Import/Export Data":
-    import_export_data()
-
-
+    # ✅ تشغيل الصفحة بناءً على menu
+    if st.session_state["menu"] == "🏠 Home":
+        home()
+    elif st.session_state["menu"] == "➕ Add Product":
+        add_product()
+    elif st.session_state["menu"] == "📂 Manage Categories":
+        manage_categories()
+    elif st.session_state["menu"] == "📦 View Products":
+        view_products()
+    elif st.session_state["menu"] == "📤 Import/Export Data":
+        import_export_data()
 
 if __name__ == "__main__":
     main()
