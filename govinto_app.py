@@ -366,31 +366,25 @@ def home():
 
     st.markdown("---")
 
-    # ✅ أزرار الاختصار Quick Access
-    st.subheader("🚀 Quick Access")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        if st.button("➕ Add New Product"):
-            if st.session_state["menu"] != "➕ Add Product":
-                st.session_state["menu"] = "➕ Add Product"
-                st.write("🔄 Changing menu to ➕ Add Product")
-                st.rerun()
-    
-    with col2:
-        if st.button("📂 Manage Categories") and st.session_state["role"] == "developer":
-            if st.session_state["menu"] != "📂 Manage Categories":
-                st.session_state["menu"] = "📂 Manage Categories"
-                st.write("🔄 Changing menu to 📂 Manage Categories")
-                st.rerun()
-    
-    with col3:
-        if st.button("📦 View Products"):
-            if st.session_state["menu"] != "📦 View Products":
-                st.session_state["menu"] = "📦 View Products"
-                st.write("🔄 Changing menu to 📦 View Products")
-                st.rerun()
+        st.subheader("🚀 Quick Access")
+        
+        quick_access_options = {
+            "🏠 Home": "🏠 Home",
+            "➕ Add Product": "➕ Add Product",
+            "📂 Manage Categories": "📂 Manage Categories",
+            "📦 View Products": "📦 View Products",
+        }
+        
+        selected_page = st.radio(
+            "🔹 Choose a section:",
+            list(quick_access_options.keys()),
+            horizontal=True
+        )
+        
+        if st.session_state["menu"] != quick_access_options[selected_page]:
+            st.session_state["menu"] = quick_access_options[selected_page]
+            st.rerun()
+
 
 
     
