@@ -373,18 +373,22 @@ def home():
     
     with col1:
         if st.button("➕ Add New Product"):
-            st.session_state["menu"] = "➕ Add Product"
-            st.rerun()
-
+            if st.session_state["menu"] != "➕ Add Product":
+                st.session_state["menu"] = "➕ Add Product"
+                st.rerun()
+    
     with col2:
         if st.button("📂 Manage Categories") and st.session_state["role"] == "developer":
-            st.session_state["menu"] = "📂 Manage Categories"
-            st.rerun()
-
+            if st.session_state["menu"] != "📂 Manage Categories":
+                st.session_state["menu"] = "📂 Manage Categories"
+                st.rerun()
+    
     with col3:
         if st.button("📦 View Products"):
-            st.session_state["menu"] = "📦 View Products"
-            st.rerun()
+            if st.session_state["menu"] != "📦 View Products":
+                st.session_state["menu"] = "📦 View Products"
+                st.rerun()
+
     
     # ✅ عرض الحالة الحالية لـ menu للمساعدة في تصحيح الأخطاء
     st.write("📌 Current menu:", st.session_state["menu"])
@@ -422,6 +426,7 @@ def main():
         view_products()
     elif st.session_state["menu"] == "📤 Import/Export Data":
         import_export_data()
+
 
 if __name__ == "__main__":
     main()
