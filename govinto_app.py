@@ -44,7 +44,7 @@ def get_user_from_firestore(username):
 
 
 def login():
-    """نظام تسجيل الدخول وتحسين معالجة الأخطاء"""
+    """نظام تسجيل الدخول مع منع الأخطاء عند إعادة التشغيل."""
     
     st.sidebar.subheader("🔐 Login")
 
@@ -60,17 +60,17 @@ def login():
         
         if user_data:
             if user_data.get("password") == password:
-                # ✅ تحديث الجلسة ولكن باستخدام `st.session_state.update()` لتجنب الأخطاء
-                st.session_state.update({
-                    "authenticated": True,
-                    "role": user_data.get("role", "user"),  # الافتراضي "user"
-                    "username": username
-                })
+                # ✅ التأكد من تحديث `session_state` قبل إعادة تشغيل التطبيق
+                st.session_state["authenticated"] = True
+                st.session_state["role"] = user_data.get("role", "user")  # الافتراضي "user"
+                st.session_state["username"] = username
 
                 st.success(f"✅ Welcome, {username}!")
                 
-                # ✅ استخدام `st.experimental_rerun()` فقط بعد تحديث الجلسة
+                # ✅ تأخير إعادة التشغيل لمنع الأخطاء
+                st.experimental_set_query_params(logged_in="true")
                 st.experimental_rerun()
+
             else:
                 st.error("❌ Incorrect password! Please try again.")
         else:
@@ -79,9 +79,8 @@ def login():
     # ✅ زر تسجيل الخروج
     if st.session_state.get("authenticated"):
         if st.sidebar.button("🚪 Logout"):
-            # ✅ حذف جميع البيانات من `session_state` بشكل آمن
-            for key in list(st.session_state.keys()):
-                del st.session_state[key]
+            # ✅ حذف جميع بيانات الجلسة قبل إعادة تشغيل التطبيق
+            st.session_state.clear()
             st.experimental_rerun()
 
   
