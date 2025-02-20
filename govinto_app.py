@@ -319,6 +319,12 @@ def add_product():
 
 def home():
     """ الصفحة الرئيسية - لوحة معلومات تفاعلية """
+    
+    # ✅ التأكد من تسجيل الدخول
+    if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
+        st.warning("🔐 Please log in to access the dashboard.")
+        st.stop()
+
     st.title("🏠 Welcome to Govinto Manager!")
     st.write("📊 Below is a quick overview of your store's performance.")
 
@@ -335,6 +341,7 @@ def home():
     # ✅ حساب الإحصائيات
     total_products = len(df_products)
     total_categories = len(categories)
+    
     most_liked_product = df_products.loc[df_products["likes"].idxmax()] if not df_products.empty else None
     most_commented_product = df_products.loc[df_products["comments"].idxmax()] if not df_products.empty else None
 
@@ -355,27 +362,32 @@ def home():
         with col2:
             st.metric(label="❤ Most Liked", value=most_liked_product["product_name"] if most_liked_product is not None else "N/A")
     else:
-        st.info("No products available yet!")
+        st.info("❌ No products available yet!")
 
     st.markdown("---")
 
-    # ✅ أزرار الاختصار
+    # ✅ أزرار الاختصار Quick Access
     st.subheader("🚀 Quick Access")
-    if st.button("➕ Add New Product"):
-        if st.session_state["menu"] != "➕ Add Product":
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("➕ Add New Product"):
             st.session_state["menu"] = "➕ Add Product"
             st.rerun()
-    
-    if st.button("📂 Manage Categories"):
-        if st.session_state["menu"] != "📂 Manage Categories":
+
+    with col2:
+        if st.button("📂 Manage Categories") and st.session_state["role"] == "developer":
             st.session_state["menu"] = "📂 Manage Categories"
             st.rerun()
-    
-    if st.button("📦 View Products"):
-        if st.session_state["menu"] != "📦 View Products":
+
+    with col3:
+        if st.button("📦 View Products"):
             st.session_state["menu"] = "📦 View Products"
             st.rerun()
-   
+    
+    # ✅ عرض الحالة الحالية لـ menu للمساعدة في تصحيح الأخطاء
+    st.write("📌 Current menu:", st.session_state["menu"])
 
 
 
