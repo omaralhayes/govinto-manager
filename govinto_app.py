@@ -381,28 +381,19 @@ def home():
       
 def horizontal_menu():
     """قائمة أفقية للتنقل بين الصفحات"""
+    
     menu_options = ["🏠 Home", "➕ Add Product", "📦 View Products", "📤 Import/Export Data"]
     
     if st.session_state["role"] == "developer":
-        menu_options.insert(2, "📂 Manage Categories")  # إضافة الفئات فقط للمطور
+        menu_options.insert(2, "📂 Manage Categories")  # ✅ إضافة الفئات فقط للمطور
 
-    # ✅ عرض القائمة الأفقية باستخدام `st.radio()`
+    # ✅ عرض القائمة الأفقية باستخدام `st.radio()` وتحديث `session_state["menu"]`
     selected_page = st.radio("", menu_options, horizontal=True, key="bottom_menu")
 
-    # ✅ تحديث `menu` في `session_state`
-    st.session_state["menu"] = selected_page
-
-    # ✅ تشغيل الصفحة المختارة
-    if selected_page == "🏠 Home":
-        home()
-    elif selected_page == "➕ Add Product":
-        add_product()
-    elif selected_page == "📂 Manage Categories":
-        manage_categories()
-    elif selected_page == "📦 View Products":
-        view_products()
-    elif selected_page == "📤 Import/Export Data":
-        import_export_data()
+    # ✅ تحديث `menu` في `session_state` فقط إذا تغير الاختيار
+    if selected_page != st.session_state["menu"]:
+        st.session_state["menu"] = selected_page
+        st.rerun()  # 🔄 إعادة تشغيل الصفحة عند تغيير الاختيار
 
 
 
