@@ -232,6 +232,66 @@ def add_product():
         st.rerun()
 
 
+def home():
+    """ الصفحة الرئيسية - لوحة معلومات تفاعلية """
+    st.title("🏠 Welcome to Govinto Manager!")
+    st.write("📊 Below is a quick overview of your store's performance.")
+
+    # ✅ جلب بيانات المنتجات والفئات من Firestore
+    products_ref = db.collection("products").stream()
+    categories_ref = db.collection("categories").stream()
+
+    # ✅ تحويل البيانات إلى DataFrames
+    products = [doc.to_dict() for doc in products_ref]
+    categories = [doc.id for doc in categories_ref]
+
+    df_products = pd.DataFrame(products)
+
+    # ✅ حساب الإحصائيات
+    total_products = len(df_products)
+    total_categories = len(categories)
+    most_liked_product = df_products.loc[df_products["likes"].idxmax()] if not df_products.empty else None
+    most_commented_product = df_products.loc[df_products["comments"].idxmax()] if not df_products.empty else None
+
+    # ✅ عرض الإحصائيات الرئيسية
+    col1, col2, col3 = st.columns(3)
+    col1.metric(label="📦 Total Products", value=total_products)
+    col2.metric(label="📂 Total Categories", value=total_categories)
+    col3.metric(label="👍 Most Liked", value=most_liked_product["product_name"] if most_liked_product is not None else "N/A")
+
+    st.markdown("---")
+
+    # ✅ عرض المنتجات الأكثر تفاعلًا
+    st.subheader("🔥 Top Interacting Products")
+    if not df_products.empty:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric(label="💬 Most Commented", value=most_commented_product["product_name"] if most_commented_product is not None else "N/A")
+        with col2:
+            st.metric(label="❤ Most Liked", value=most_liked_product["product_name"] if most_liked_product is not None else "N/A")
+    else:
+        st.info("No products available yet!")
+
+    st.markdown("---")
+
+    # ✅ أزرار الاختصار
+    st.subheader("🚀 Quick Access")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        if st.button("➕ Add New Product"):
+            st.session_state["menu"] = "➕ Add Product"
+            st.rerun()
+    with col2:
+        if st.button("📂 Manage Categories"):
+            st.session_state["menu"] = "📂 Manage Categories"
+            st.rerun()
+    with col3:
+        if st.button("📦 View Products"):
+            st.session_state["menu"] = "📦 View Products"
+            st.rerun()
+      
+
+
 
 def main():
     """واجهة التطبيق الرئيسية مع تحسين تجربة المستخدم وإضافة زر 'Add to Home Screen'."""
@@ -239,7 +299,6 @@ def main():
     # ✅ شعار المتجر في القائمة الجانبية
     st.sidebar.image("govinto_logo.png", use_container_width=True)
 
-    
     # ✅ قائمة التنقل الجانبية
     st.sidebar.title("📌 Menu")
     menu = ["🏠 Home", "➕ Add Product", "📂 Manage Categories", "📦 View Products", "📤 Import/Export Data"]
@@ -260,8 +319,7 @@ def main():
 
     # ✅ تشغيل الصفحة المختارة من القائمة الجانبية
     if choice == "🏠 Home":
-        st.title("🏠 Welcome to Govinto Manager!")
-        st.write("Use the sidebar to navigate through different sections.")
+        home()
     elif choice == "➕ Add Product":
         add_product()
     elif choice == "📂 Manage Categories":
@@ -274,4 +332,3 @@ def main():
 # ✅ تشغيل التطبيق
 if __name__ == "__main__":
     main()
-
