@@ -380,54 +380,36 @@ def home():
 
 
 def main():
-    """واجهة التطبيق الرئيسية مع تسجيل الدخول وإدارة الصلاحيات."""
-
-    # ✅ عرض تسجيل الدخول في الصفحة الرئيسية
     login()
 
-    # ✅ التحقق مما إذا كان المستخدم قد سجل الدخول
     if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
         st.warning("🔐 Please log in to access the application.")
-        return  # ⛔️ يمنع الوصول للتطبيق إذا لم يتم تسجيل الدخول
+        return
 
-    # ✅ قائمة التنقل الجانبية بدون شعار بعد تسجيل الدخول
     st.sidebar.title("📌 Menu")
+    menu_options = ["🏠 Home", "➕ Add Product", "📦 View Products", "📤 Import/Export Data"]
+    
+    if st.session_state["role"] == "developer":
+        menu_options.insert(2, "📂 Manage Categories")  
 
-    if st.session_state["role"] in ["developer", "user"]:
-        menu = ["🏠 Home", "➕ Add Product", "📦 View Products", "📤 Import/Export Data"]
-        if st.session_state["role"] == "developer":
-            menu.insert(2, "📂 Manage Categories")  # ✅ إضافة خيار "Manage Categories" للمطور فقط
+    choice = st.sidebar.radio("📍 Select an option", menu_options)
 
-    choice = st.sidebar.radio("📍 Select an option", menu)
+    # ✅ تحديث القائمة بناءً على session_state
+    if choice != st.session_state.get("menu"):
+        st.session_state["menu"] = choice
+        st.rerun()  # إعادة تشغيل التطبيق
 
-    # ✅ إضافة زر "Install App" في القائمة الجانبية
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("📲 Install App")
-    if st.sidebar.button("Add to Home Screen"):
-        st.sidebar.info("""
-        **📲 How to install this app on your phone:**
-        
-        1️⃣ Open this app in **Chrome (Android)** or **Safari (iPhone).**  
-        2️⃣ Tap on **'Share'** (iPhone) or **'⋮ Menu'** (Android).  
-        3️⃣ Select **'Add to Home Screen'.**  
-        4️⃣ Tap **'Add'**, and now you can access this app like a native app! 🚀
-        """)
-
-    # ✅ تشغيل الصفحة المختارة من القائمة الجانبية
-    if choice == "🏠 Home":
+    # ✅ تشغيل الصفحة بناءً على menu
+    if st.session_state["menu"] == "🏠 Home":
         home()
-    elif choice == "➕ Add Product":
+    elif st.session_state["menu"] == "➕ Add Product":
         add_product()
-    elif choice == "📂 Manage Categories":
+    elif st.session_state["menu"] == "📂 Manage Categories":
         manage_categories()
-    elif choice == "📦 View Products":
+    elif st.session_state["menu"] == "📦 View Products":
         view_products()
-    elif choice == "📤 Import/Export Data":
+    elif st.session_state["menu"] == "📤 Import/Export Data":
         import_export_data()
 
-    # ✅ تحديث `menu` في `session_state`
-    st.session_state["menu"] = choice
-
-# ✅ تشغيل التطبيق
 if __name__ == "__main__":
     main()
