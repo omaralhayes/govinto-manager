@@ -366,24 +366,24 @@ def home():
 
     st.markdown("---")
 
-        st.subheader("🚀 Quick Access")
-        
-        quick_access_options = {
-            "🏠 Home": "🏠 Home",
-            "➕ Add Product": "➕ Add Product",
-            "📂 Manage Categories": "📂 Manage Categories",
-            "📦 View Products": "📦 View Products",
-        }
-        
-        selected_page = st.radio(
-            "🔹 Choose a section:",
-            list(quick_access_options.keys()),
-            horizontal=True
-        )
-        
-        if st.session_state["menu"] != quick_access_options[selected_page]:
-            st.session_state["menu"] = quick_access_options[selected_page]
-            st.rerun()
+    st.subheader("🚀 Quick Access")
+    
+    quick_access_options = {
+        "🏠 Home": "🏠 Home",
+        "➕ Add Product": "➕ Add Product",
+        "📂 Manage Categories": "📂 Manage Categories",
+        "📦 View Products": "📦 View Products",
+    }
+    
+    selected_page = st.radio(
+        "🔹 Choose a section:",
+        list(quick_access_options.keys()),
+        horizontal=True
+    )
+    
+    if st.session_state["menu"] != quick_access_options[selected_page]:
+        st.session_state["menu"] = quick_access_options[selected_page]
+        st.rerun()
 
 
 
