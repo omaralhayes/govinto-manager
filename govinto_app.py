@@ -375,12 +375,7 @@ def home():
         if st.session_state["menu"] != "📦 View Products":
             st.session_state["menu"] = "📦 View Products"
             st.rerun()
-    st.write("📌 Current menu:", st.session_state["menu"])
-
-
-
-
-      
+   
 
 
 
