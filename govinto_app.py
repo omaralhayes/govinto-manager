@@ -363,21 +363,21 @@ def home():
     # ✅ أزرار الاختصار في أسفل الصفحة
     st.markdown("### 🚀 Quick Access")
     col1, col2, col3 = st.columns(3)
-
+    
     with col1:
-        if st.button("➕ Add New Product"):
+        if st.button("➕ Add New Product", key="quick_add_product"):
             st.session_state["menu"] = "➕ Add Product"
-            st.rerun()
-
+            st.experimental_rerun()
+    
     with col2:
-        if st.button("📤 Import/Export Data"):
+        if st.button("📤 Import/Export Data", key="quick_import_export"):
             st.session_state["menu"] = "📤 Import/Export Data"
-            st.rerun()
-
+            st.experimental_rerun()
+    
     with col3:
-        if st.button("📦 View Products"):
+        if st.button("📦 View Products", key="quick_view_products"):
             st.session_state["menu"] = "📦 View Products"
-            st.rerun()
+            st.experimental_rerun()
 
       
 
