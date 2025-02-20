@@ -60,16 +60,19 @@ def login():
         
         if user_data:
             if user_data.get("password") == password:
-                # ✅ التأكد من تحديث `session_state` قبل إعادة تشغيل التطبيق
+                # ✅ تحديث بيانات الجلسة بعد تسجيل الدخول
                 st.session_state["authenticated"] = True
                 st.session_state["role"] = user_data.get("role", "user")  # الافتراضي "user"
                 st.session_state["username"] = username
 
                 st.success(f"✅ Welcome, {username}!")
-                
+
+                # ✅ استخدام `st.query_params` بدلاً من `st.experimental_set_query_params`
+                st.query_params["logged_in"] = "true"
+
                 # ✅ تأخير إعادة التشغيل لمنع الأخطاء
-                st.experimental_set_query_params(logged_in="true")
-                st.experimental_rerun()
+                st.session_state["reload"] = True
+                st.rerun()
 
             else:
                 st.error("❌ Incorrect password! Please try again.")
@@ -81,7 +84,8 @@ def login():
         if st.sidebar.button("🚪 Logout"):
             # ✅ حذف جميع بيانات الجلسة قبل إعادة تشغيل التطبيق
             st.session_state.clear()
-            st.experimental_rerun()
+            st.query_params["logged_in"] = "false"
+            st.rerun()
 
   
 
