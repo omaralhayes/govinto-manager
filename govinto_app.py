@@ -318,10 +318,7 @@ def add_product():
 
 
 def home():
-    """ الصفحة الرئيسية - لوحة معلومات تفاعلية """
-    
-    # ✅ التحقق من تسجيل الدخول، إذا لم يكن المستخدم مسجلًا، عرض نموذج تسجيل الدخول
-    if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
+  
         login()
         return  # ⛔ منع تحميل باقي الصفحة إذا لم يتم تسجيل الدخول
 
