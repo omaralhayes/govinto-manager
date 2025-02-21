@@ -319,9 +319,10 @@ def add_product():
 
 def home():
     """ الصفحة الرئيسية - لوحة معلومات تفاعلية """
-    
-    # ✅ عرض الشعار دائمًا في الصفحة الرئيسية
-    st.image("govinto_logo.png", use_container_width=True)
+
+    # ✅ عرض الشعار فقط عند تسجيل الدخول
+    if "authenticated" in st.session_state and st.session_state["authenticated"]:
+        st.image("govinto_logo.png", use_container_width=True)
 
     # ✅ التحقق من تسجيل الدخول، إذا لم يكن المستخدم مسجلًا، عرض نموذج تسجيل الدخول
     if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
@@ -369,23 +370,6 @@ def home():
 
     st.markdown("---")
 
-    # ✅ قائمة أفقية للتنقل بين الصفحات
-    st.subheader("🚀 Quick Access")
-    selected_page = st.radio(
-        "📍 Navigate to:",
-        ["🏠 Home", "➕ Add Product", "📦 View Products", "📤 Import/Export Data"] + (["📂 Manage Categories"] if st.session_state["role"] == "developer" else []),
-        horizontal=True
-    )
-
-    # ✅ تحديث القائمة بناءً على session_state
-    if selected_page != st.session_state["menu"]:
-        st.session_state["menu"] = selected_page
-        st.rerun()
-
-
-
-    
-  
 
 
 
@@ -407,6 +391,21 @@ def main():
         view_products()
     elif st.session_state["menu"] == "📤 Import/Export Data":
         import_export_data()
+
+    # ✅ إضافة القائمة الأفقية أسفل كل الصفحات
+    st.markdown("---")
+    st.subheader("🚀 Quick Access")
+    selected_page = st.radio(
+        "📍 Navigate to:",
+        ["🏠 Home", "➕ Add Product", "📦 View Products", "📤 Import/Export Data"] + (["📂 Manage Categories"] if st.session_state["role"] == "developer" else []),
+        horizontal=True
+    )
+
+    # ✅ تحديث `menu` بناءً على الخيار المحدد
+    if selected_page != st.session_state["menu"]:
+        st.session_state["menu"] = selected_page
+        st.rerun()
         
 if __name__ == "__main__":
     main()
+
