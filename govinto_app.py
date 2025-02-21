@@ -403,9 +403,11 @@ def main():
     # ✅ إضافة القائمة الأفقية أسفل كل الصفحات بعد تسجيل الدخول فقط
     st.markdown("---")
     selected_page = st.radio(
-        "📍 Navigate to:",
-        ["🏠 Home", "➕ Add Product", "📦 View Products", "📤 Import/Export Data"] + (["📂 Manage Categories"] if st.session_state["role"] == "developer" else []),
-        horizontal=True
+    "",
+    ["🏠 Home", "➕ Add Product", "📦 View Products", "📤 Import/Export Data"] + (["📂 Manage Categories"] if st.session_state["role"] == "developer" else []),
+    horizontal=True
+)
+
     )
 
     # ✅ تحديث `menu` بناءً على الخيار المحدد
