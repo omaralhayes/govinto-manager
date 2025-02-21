@@ -368,7 +368,7 @@ def home():
     else:
         st.info("❌ No products available yet!")
 
-    st.markdown("---")
+
 
 
 
