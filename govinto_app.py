@@ -392,9 +392,8 @@ def main():
     elif st.session_state["menu"] == "📤 Import/Export Data":
         import_export_data()
 
-    # ✅ إضافة القائمة الأفقية أسفل كل الصفحات
+    # ✅ إضافة القائمة الأفقية أسفل كل الصفحات بدلاً من "🚀 Quick Access"
     st.markdown("---")
-    st.subheader("🚀 Quick Access")
     selected_page = st.radio(
         "📍 Navigate to:",
         ["🏠 Home", "➕ Add Product", "📦 View Products", "📤 Import/Export Data"] + (["📂 Manage Categories"] if st.session_state["role"] == "developer" else []),
@@ -408,4 +407,3 @@ def main():
         
 if __name__ == "__main__":
     main()
-
