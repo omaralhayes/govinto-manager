@@ -376,6 +376,11 @@ def home():
 def main():
     """ الواجهة الرئيسية للتحكم في التنقل بين الصفحات """
 
+    # ✅ التحقق مما إذا كان المستخدم مسجلًا، وإذا لم يكن، تشغيل `login()` فقط
+    if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
+        login()
+        return  # ⛔ منع تشغيل أي شيء آخر حتى يتم تسجيل الدخول
+
     # ✅ التأكد من أن menu و role معرفان قبل استخدامهما
     if "menu" not in st.session_state:
         st.session_state["menu"] = "🏠 Home"
@@ -395,7 +400,7 @@ def main():
     elif st.session_state["menu"] == "📤 Import/Export Data":
         import_export_data()
 
-    # ✅ إضافة القائمة الأفقية أسفل كل الصفحات بدلاً من "🚀 Quick Access"
+    # ✅ إضافة القائمة الأفقية أسفل كل الصفحات بعد تسجيل الدخول فقط
     st.markdown("---")
     selected_page = st.radio(
         "📍 Navigate to:",
@@ -410,3 +415,4 @@ def main():
         
 if __name__ == "__main__":
     main()
+
