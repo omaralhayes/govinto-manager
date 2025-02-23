@@ -1,3 +1,4 @@
+
 from datetime import datetime
 import streamlit as st
 import pandas as pd
@@ -367,50 +368,49 @@ def home():
     else:
         st.info("❌ No products available yet!")
 
-
+    st.markdown("---")
 
 
 
 
 def main():
-    """واجهة التطبيق الرئيسية مع تسجيل الدخول وإدارة الصلاحيات."""
+    """ الواجهة الرئيسية للتحكم في التنقل بين الصفحات """
 
-    # ✅ تشغيل نظام تسجيل الدخول
-    login()
-
-    # ✅ التحقق مما إذا كان المستخدم قد سجل الدخول
+    # ✅ التحقق مما إذا كان المستخدم مسجلًا، وإذا لم يكن، تشغيل `login()` فقط
     if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
-        st.warning("🔐 Please log in to access the application.")
-        return  # ⛔️ يمنع الوصول للتطبيق إذا لم يتم تسجيل الدخول
+        login()
+        return  # ⛔ منع تشغيل أي شيء آخر حتى يتم تسجيل الدخول
 
-    # ✅ قائمة التنقل الجانبية
-    st.sidebar.title("📌 Menu")
+    # ✅ التأكد من أن menu و role معرفان قبل استخدامهما
+    if "menu" not in st.session_state:
+        st.session_state["menu"] = "🏠 Home"
 
-    if st.session_state["role"] in ["developer", "user"]:
-        menu = ["🏠 Home", "➕ Add Product", "📦 View Products", "📤 Import/Export Data"]
-        if st.session_state["role"] == "developer":
-            menu.insert(2, "📂 Manage Categories")  # ✅ إضافة "Manage Categories" للمطور فقط
+    if "role" not in st.session_state:
+        st.session_state["role"] = "user"  # تعيين الدور الافتراضي للمستخدم العادي
 
-    choice = st.sidebar.radio("📍 Select an option", menu, key="sidebar_menu")
+    # ✅ تشغيل الصفحة بناءً على menu
+    if st.session_state["menu"] == "🏠 Home":
+        home()
+    elif st.session_state["menu"] == "➕ Add Product":
+        add_product()
+    elif st.session_state["menu"] == "📂 Manage Categories":
+        manage_categories()
+    elif st.session_state["menu"] == "📦 View Products":
+        view_products()
+    elif st.session_state["menu"] == "📤 Import/Export Data":
+        import_export_data()
 
-    # ✅ تشغيل الصفحة المختارة بناءً على القائمة الجانبية
-    page_function_mapping = {
-        "🏠 Home": home,
-        "➕ Add Product": add_product,
-        "📂 Manage Categories": manage_categories,
-        "📦 View Products": view_products,
-        "📤 Import/Export Data": import_export_data
-    }
-
-    # ✅ منع إعادة تشغيل الصفحة إذا لم يتغير الاختيار
-    if choice != st.session_state.get("menu"):
-        st.session_state["menu"] = choice
-
-    # ✅ تشغيل الصفحة المختارة
-    if st.session_state["menu"] in page_function_mapping:
-        page_function_mapping[st.session_state["menu"]]()  
-
-    # ✅ **إضافة القائمة الأفقية في أسفل كل صفحة**
+    # ✅ إضافة القائمة الأفقية أسفل كل الصفحات بعد تسجيل الدخول فقط
     st.markdown("---")
-    horizontal_menu()
+    selected_page = st.selectbox(
+        "",  # ✅ إزالة عنوان القائمة لجعلها أكثر أناقة
+        ["🏠 Home", "➕ Add Product", "📦 View Products", "📤 Import/Export Data"] + (["📂 Manage Categories"] if st.session_state["role"] == "developer" else [])
+    )
 
+    # ✅ تحديث `menu` بناءً على الخيار المحدد
+    if selected_page != st.session_state["menu"]:
+        st.session_state["menu"] = selected_page
+        st.rerun()
+        
+if __name__ == "__main__":
+    main()
