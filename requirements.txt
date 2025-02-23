@@ -1,6 +1,6 @@
+firebase-admin
 streamlit
 pandas
-firebase-admin
 openpyxl
 sqlite-utils
 plotly
